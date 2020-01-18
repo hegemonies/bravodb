@@ -1,0 +1,3 @@
+# BravoDB
+
+Decentralized database
