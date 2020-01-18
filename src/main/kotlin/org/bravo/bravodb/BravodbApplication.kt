@@ -5,6 +5,6 @@ import org.bravo.bravodb.discovery.server.Server
 
 fun main() {
     println("Hello")
-    val server = Server()
-    server.start()
+//    val server = Server()
+//    server.start()
 }

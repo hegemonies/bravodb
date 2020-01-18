@@ -1,18 +1,17 @@
 package org.bravo.bravodb.discovery.server
 
+import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.config.ServerConfig
-import java.util.logging.Logger
 
 /**
  * Discovery server
  */
 class Server {
 
-    fun start() {
-        logger.info("Hello")
+    fun start(config: ServerConfig) {
     }
 
     companion object {
-        private val logger = Logger.getLogger(this::class.java.declaringClass.name)
+        private val logger = LogManager.getLogger(this::class.java.declaringClass)
     }
 }
