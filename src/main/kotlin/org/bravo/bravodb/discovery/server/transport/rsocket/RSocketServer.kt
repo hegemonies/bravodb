@@ -1,6 +1,8 @@
 package org.bravo.bravodb.discovery.server.transport.rsocket
 
-import io.rsocket.*
+import io.rsocket.ConnectionSetupPayload
+import io.rsocket.RSocket
+import io.rsocket.RSocketFactory
 import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.server.TcpServerTransport
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -15,13 +17,13 @@ class RSocketServer : ServerTransport {
 
     override suspend fun start() {
         RSocketFactory.receive()
-                .frameDecoder(PayloadDecoder.ZERO_COPY)
-                .acceptor(this::receiveHandler)
-                .transport(TcpServerTransport.create(port))
-                .start()
-                .awaitFirstOrNull()
-                ?.onClose()
-                ?: logger.error("Error starting RSocket server")
+            .frameDecoder(PayloadDecoder.ZERO_COPY)
+            .acceptor(this::receiveHandler)
+            .transport(TcpServerTransport.create(port))
+            .start()
+            .awaitFirstOrNull()
+            ?.onClose()
+            ?: logger.error("Error starting RSocket server")
     }
 
     private fun receiveHandler(setup: ConnectionSetupPayload, sendingSocket: RSocket): Mono<RSocket> {

@@ -9,7 +9,7 @@ import org.bravo.bravodb.discovery.server.config.ServerConfig
  * Discovery server
  */
 class Server(
-        private val config: ServerConfig
+    private val config: ServerConfig
 ) {
 
     private val transport = config.transport

@@ -19,9 +19,9 @@ class RSocketClient : ClientTransport {
     init {
         runBlocking {
             client = RSocketFactory.connect()
-                    .transport(TcpClientTransport.create(port))
-                    .start()
-                    .awaitFirstOrNull()
+                .transport(TcpClientTransport.create(port))
+                .start()
+                .awaitFirstOrNull()
             client ?: also {
                 logger.error("Error init RSocketClient")
                 exitProcess(1)
@@ -33,14 +33,14 @@ class RSocketClient : ClientTransport {
         (0..10).forEach {
             client?.run {
                 requestResponse(DefaultPayload.create("Ping $it"))
-                        .awaitFirstOrNull()
-                        ?.also {
-                            logger.info("Receive data: ${it.dataUtf8}")
-                        }
+                    .awaitFirstOrNull()
+                    ?.also {
+                        logger.info("Receive data: ${it.dataUtf8}")
+                    }
             }
-            ?: also {
-                logger.error("Error self registration")
-            }
+                ?: also {
+                    logger.error("Error self registration")
+                }
         }
     }
 

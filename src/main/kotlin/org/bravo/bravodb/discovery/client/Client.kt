@@ -5,7 +5,7 @@ import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import reactor.core.publisher.Mono
 
 class Client(
-        config: ClientConfig
+    config: ClientConfig
 ) {
     private val transport: ClientTransport = config.transport
 
