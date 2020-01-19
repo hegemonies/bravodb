@@ -32,6 +32,8 @@ dependencies {
     compile("org.apache.logging.log4j", "log4j-core", "2.13.0")
     implementation("org.apache.logging.log4j", "log4j-slf4j-impl", "2.13.0")
 
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1")
+
 //    implementation("org.springframework.boot:spring-boot-starter")
 //    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
