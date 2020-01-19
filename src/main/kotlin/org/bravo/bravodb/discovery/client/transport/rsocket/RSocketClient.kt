@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.client.rsocket
+package org.bravo.bravodb.discovery.client.transport.rsocket
 
 import io.rsocket.RSocket
 import io.rsocket.RSocketFactory
@@ -7,14 +7,14 @@ import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.client.ClientTransport
-import java.time.Instant
-import java.util.*
+import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import kotlin.system.exitProcess
 
-class RSocketClient(port: Int) : ClientTransport {
+class RSocketClient : ClientTransport {
 
     private var client: RSocket? = null
+    override var port: Int = 8919
+    override var host: String = "localhost"
 
     init {
         runBlocking {

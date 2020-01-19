@@ -1,5 +1,7 @@
 package org.bravo.bravodb.discovery.server.transport
 
 interface ServerTransport {
-    suspend fun start(port: Int)
+    var port: Int
+    var host: String
+    suspend fun start()
 }

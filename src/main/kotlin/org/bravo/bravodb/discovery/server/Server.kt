@@ -12,6 +12,8 @@ class Server(
         private val config: ServerConfig
 ) {
 
+    private val transport = config.transport
+
     /**
      * Async start server
      */
@@ -23,8 +25,7 @@ class Server(
     }
 
     private suspend fun bootstrap() {
-        config.transport
-                .start(config.port)
+        transport.start()
     }
 
     companion object {

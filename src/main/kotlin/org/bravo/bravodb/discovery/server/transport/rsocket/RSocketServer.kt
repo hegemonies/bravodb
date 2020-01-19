@@ -10,7 +10,10 @@ import reactor.core.publisher.Mono
 
 class RSocketServer : ServerTransport {
 
-    override suspend fun start(port: Int) {
+    override var port: Int = 8919
+    override var host: String = "localhost"
+
+    override suspend fun start() {
         RSocketFactory.receive()
                 .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .acceptor(this::receiveHandler)
