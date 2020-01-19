@@ -1,4 +1,9 @@
 package org.bravo.bravodb.discovery.data.registration
 
-class Response {
-}
+import org.bravo.bravodb.discovery.data.common.Answer
+import org.bravo.bravodb.discovery.data.common.InstanceInfo
+
+data class Response(
+    val status: Answer,
+    val otherInstances: ArrayList<InstanceInfo>?
+)
