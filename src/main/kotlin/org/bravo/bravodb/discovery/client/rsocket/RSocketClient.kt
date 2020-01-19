@@ -32,7 +32,7 @@ class RSocketClient(port: Int) : ClientTransport {
     override suspend fun selfRegistration() {
         (0..10).forEach {
             client?.run {
-                requestResponse(DefaultPayload.create("Ping $it from ${Date.from(Instant.now())}"))
+                requestResponse(DefaultPayload.create("Ping $it"))
                         .awaitFirstOrNull()
                         ?.also {
                             logger.info("Receive data: ${it.dataUtf8}")
