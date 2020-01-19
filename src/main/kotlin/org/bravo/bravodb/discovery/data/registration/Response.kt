@@ -5,5 +5,5 @@ import org.bravo.bravodb.discovery.data.common.InstanceInfo
 
 data class Response(
     val status: Answer,
-    val otherInstances: ArrayList<InstanceInfo>?
+    val otherInstances: List<InstanceInfo>?
 )
