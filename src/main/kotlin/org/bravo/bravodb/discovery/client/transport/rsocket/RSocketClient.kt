@@ -7,7 +7,6 @@ import io.rsocket.RSocketFactory
 import io.rsocket.transport.netty.client.TcpClientTransport
 import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import org.bravo.bravodb.discovery.data.common.AnswerStatus
@@ -23,20 +22,20 @@ class RSocketClient : ClientTransport {
     override var port: Int = 8919
     override var host: String = "localhost"
 
-    init {
-        runBlocking {
-            client = RSocketFactory.connect()
-                .transport(TcpClientTransport.create(port))
-                .start()
-                .awaitFirstOrNull()
-            client ?: also {
-                logger.error("Error init RSocketClient")
-                exitProcess(1)
-            }
+    private suspend fun initClient() {
+        client = RSocketFactory.connect()
+            .transport(TcpClientTransport.create(port))
+            .start()
+            .awaitFirstOrNull()
+        client ?: also {
+            logger.error("Error init RSocketClient")
+            exitProcess(1)
         }
     }
 
     override suspend fun selfRegistration() {
+        client ?: initClient()
+
         val jsonMapper = jacksonObjectMapper()
         val request = jsonMapper.writeValueAsString(Request(InstanceInfo(host, port)))
 

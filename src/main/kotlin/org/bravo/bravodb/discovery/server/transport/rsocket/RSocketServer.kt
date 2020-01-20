@@ -16,14 +16,18 @@ class RSocketServer : ServerTransport {
     override var host: String = "localhost"
 
     override suspend fun start() {
-        RSocketFactory.receive()
-            .frameDecoder(PayloadDecoder.ZERO_COPY)
-            .acceptor(this::receiveHandler)
-            .transport(TcpServerTransport.create(port))
-            .start()
-            .awaitFirstOrNull()
-            ?.onClose()
-            ?: logger.error("Error starting RSocket server")
+        try {
+            RSocketFactory.receive()
+                .frameDecoder(PayloadDecoder.ZERO_COPY)
+                .acceptor(this::receiveHandler)
+                .transport(TcpServerTransport.create(port))
+                .start()
+                .awaitFirstOrNull()
+                ?.onClose()
+                ?: logger.error("Error starting RSocket server")
+        } catch (e: Exception) {
+            logger.error(e)
+        }
     }
 
     private fun receiveHandler(setup: ConnectionSetupPayload, sendingSocket: RSocket): Mono<RSocket> {
