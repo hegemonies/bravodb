@@ -23,7 +23,7 @@ class RSocketReceiveHandler : AbstractRSocket() {
      */
     override fun requestResponse(payload: Payload?): Mono<Payload> {
         return Mono.create { sink ->
-            logger.debug("Receive data: ${payload?.dataUtf8}")
+            logger.info("Receive data: ${payload?.dataUtf8}")
 
             payload?.let {
                 try {

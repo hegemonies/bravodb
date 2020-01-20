@@ -9,8 +9,7 @@ class Client(
 ) {
     private val transport: ClientTransport = config.transport
 
-    suspend fun registration(): Mono<Void> {
+    suspend fun registration() {
         transport.selfRegistration()
-        return Mono.empty()
     }
 }
