@@ -15,8 +15,23 @@ object InstanceStorage: Storage {
 
     override suspend fun save(instance: InstanceInfo) =
         mutex.withLock {
-            instances.add(instance)
+            if (!instanceExists(instance)) {
+                instances.add(instance)
+            } else {
+                true
+            }
         }
+
+    private fun instanceExists(instance: InstanceInfo): Boolean {
+        instances.find {
+            it == instance
+        }.let {
+            return when (it) {
+                null -> false
+                else -> true
+            }
+        }
+    }
 
     override suspend fun findAll() =
         mutex.withLock {
