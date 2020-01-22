@@ -1,5 +1,6 @@
 package org.bravo.bravodb.discovery.server.config
 
+import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
 import org.bravo.bravodb.discovery.server.transport.ServerTransport
 import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServer
 
@@ -10,8 +11,8 @@ class ServerConfig private constructor(
 ) {
 
     data class Builder(
-        var port: Int = 8919,
-        var host: String = "localhost",
+        var port: Int = DefaultConnectInfo.PORT,
+        var host: String = DefaultConnectInfo.HOST,
         var transport: ServerTransport = RSocketServer()
     ) {
         fun setPort(port: Int) = apply { this.port = port }

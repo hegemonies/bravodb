@@ -4,24 +4,32 @@ import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.client.Client
 import org.bravo.bravodb.discovery.client.config.ClientConfig
+import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
 import org.bravo.bravodb.discovery.data.common.InstanceInfo
 import org.bravo.bravodb.discovery.data.storage.InstanceStorage
 import org.bravo.bravodb.discovery.server.Server
 import org.bravo.bravodb.discovery.server.config.ServerConfig
 
 class Discovery(
-    private val selfConfig: ClientConfig,
-    private val configOtherServer: ServerConfig
+    private val clientConfig: ClientConfig,
+    private val serverConfig: ServerConfig
 ) {
+    private val server = Server(serverConfig)
+    private val client = Client(clientConfig)
 
-    fun start() = runBlocking {
+    fun start(otherServerConfig: ServerConfig) = runBlocking {
         logger.info("Discovery start")
 
-        InstanceStorage.save(InstanceInfo(selfConfig.host, selfConfig.port))
-        InstanceStorage.save(InstanceInfo(configOtherServer.host, configOtherServer.port))
+        if (serverConfig::class.java != otherServerConfig::class.java) {
+            logger.error("Type of server config and other known server config not equal: ${serverConfig::class.java} != ${otherServerConfig::class.java}")
+            return@runBlocking
+        }
+
+        InstanceStorage.save(InstanceInfo(clientConfig.host, clientConfig.port))
+        InstanceStorage.save(InstanceInfo(serverConfig.host, serverConfig.port))
 
         bootstrapServer()
-        bootstrapClient()
+        bootstrapClient(otherServerConfig)
     }
 
     /**
@@ -29,15 +37,30 @@ class Discovery(
      */
     private suspend fun bootstrapServer() {
         logger.info("Bootstrap server")
-        Server(configOtherServer).start()
+        server.start()
     }
 
     /**
      * Do self registration on other same servers
      */
-    private suspend fun bootstrapClient() {
+    private suspend fun bootstrapClient(otherServerConfig: ServerConfig) {
         logger.info("Bootstrap client")
-        Client(selfConfig).registration()
+
+        // registration and get info about other instance on first known instance
+        val isRegistration = client.registrationIn(InstanceInfo(otherServerConfig.host, otherServerConfig.port))
+
+        // registration in got instances
+        if (isRegistration) {
+            InstanceStorage.instances
+                .filter {
+                    it.host != DefaultConnectInfo.HOST && it.port != DefaultConnectInfo.PORT
+                }
+                .forEach {
+                    if (!client.registrationIn(it)) {
+                        logger.error("Can not registration in instance $it")
+                    }
+                }
+        }
     }
 
     companion object {

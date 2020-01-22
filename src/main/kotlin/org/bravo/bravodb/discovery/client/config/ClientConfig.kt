@@ -2,6 +2,7 @@ package org.bravo.bravodb.discovery.client.config
 
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import org.bravo.bravodb.discovery.client.transport.rsocket.RSocketClient
+import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
 
 /**
  * Contain client config data and building
@@ -13,8 +14,8 @@ class ClientConfig private constructor(
 ) {
 
     data class Builder(
-        var port: Int = 8919,
-        var host: String = "localhost",
+        var port: Int = DefaultConnectInfo.PORT,
+        var host: String = DefaultConnectInfo.HOST,
         var transport: ClientTransport = RSocketClient()
     ) {
         fun setPort(port: Int) = apply { this.port = port }

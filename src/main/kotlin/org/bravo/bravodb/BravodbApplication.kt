@@ -21,5 +21,11 @@ fun main() {
         .setTransport(RSocketClient())
         .build()
 
-    Discovery(selfConfig, knownServerConfig).start()
+    Discovery(selfConfig, knownServerConfig).start(
+        ServerConfig.Builder()
+            .setPort(port)
+            .setHost("localhost")
+            .setTransport(RSocketServer())
+            .build()
+    )
 }
