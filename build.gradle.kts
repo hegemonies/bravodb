@@ -34,6 +34,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1")
 
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
 //    implementation("org.springframework.boot:spring-boot-starter")
 //    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

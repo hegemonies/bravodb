@@ -1,25 +1,20 @@
 package org.bravo.bravodb.discovery.data.storage
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.bravo.bravodb.discovery.data.common.InstanceInfo
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Storage all information about database instances in network
  */
-object InstanceStorage: Storage {
+object InstanceStorage : Storage {
 
-    override val instances = mutableListOf<InstanceInfo>()
-
-    private val mutex = Mutex()
+    override val instances = ConcurrentLinkedQueue<InstanceInfo>()
 
     override suspend fun save(instance: InstanceInfo) =
-        mutex.withLock {
-            if (!instanceExists(instance)) {
-                instances.add(instance)
-            } else {
-                true
-            }
+        if (!instanceExists(instance)) {
+            instances.add(instance)
+        } else {
+            true
         }
 
     private fun instanceExists(instance: InstanceInfo): Boolean {
@@ -34,12 +29,8 @@ object InstanceStorage: Storage {
     }
 
     override suspend fun findAll() =
-        mutex.withLock {
-            instances
-        }
+        instances
 
     override suspend fun delete(instance: InstanceInfo) =
-        mutex.withLock {
-            instances.remove(instance)
-        }
+        instances.remove(instance)
 }

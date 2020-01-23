@@ -31,7 +31,7 @@ class RSocketReceiveHandler : AbstractRSocket() {
                     runBlocking {
                         InstanceStorage.save(InstanceInfo(request.instanceInfo.host, request.instanceInfo.port))
                         InstanceStorage.findAll().let { instancesInfo ->
-                            jacksonObjectMapper().writeValueAsString(Response(Answer(AnswerStatus.OK), instancesInfo))
+                            Response(Answer(AnswerStatus.OK), instancesInfo).toJson()
                                 .let { json ->
                                     sink.success(DefaultPayload.create(json))
                                 }
