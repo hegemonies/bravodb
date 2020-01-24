@@ -8,7 +8,7 @@ import org.bravo.bravodb.discovery.server.config.ServerConfig
 import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServer
 
 fun main() {
-    val discoveryProperties = DiscoveryProperties.fromFile("application.properties")
+    val discoveryProperties = DiscoveryProperties.fromResourceFile("application.properties")
         ?: run {
             println("Can not read properties")
             return

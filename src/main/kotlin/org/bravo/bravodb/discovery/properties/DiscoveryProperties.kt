@@ -34,7 +34,7 @@ class DiscoveryProperties private constructor(
          * @return [DiscoveryProperties] after reading properties file.
          * Can return null.
          */
-        fun fromFile(resourceFilename: String): DiscoveryProperties? {
+        fun fromResourceFile(resourceFilename: String): DiscoveryProperties? {
             this::class.java.classLoader.getResourceAsStream(resourceFilename).use {
                 val properties = Properties()
                 try {
