@@ -67,25 +67,3 @@ class Discovery(
         private val logger = LogManager.getLogger(this::class.java.declaringClass)
     }
 }
-
-fun main() {
-    runBlocking {
-        InstanceStorage.save(InstanceInfo("1", 1))
-        InstanceStorage.save(InstanceInfo("3", 3))
-
-        InstanceStorage.instances.forEach {
-            println(it)
-            if (it.port == 1) {
-                InstanceStorage.save(InstanceInfo("2", 2))
-            }
-        }
-
-        println()
-
-        InstanceStorage.instances.forEach {
-            println(it)
-        }
-
-        println(InstanceStorage.instances.contains(InstanceInfo("2", 2)))
-    }
-}

@@ -3,28 +3,33 @@ package org.bravo.bravodb
 import org.bravo.bravodb.discovery.Discovery
 import org.bravo.bravodb.discovery.client.config.ClientConfig
 import org.bravo.bravodb.discovery.client.transport.rsocket.RSocketClient
+import org.bravo.bravodb.discovery.properties.DiscoveryProperties
 import org.bravo.bravodb.discovery.server.config.ServerConfig
 import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServer
 
 fun main() {
-    val port = 8919
+    val discoveryProperties = DiscoveryProperties.fromFile("application.properties")
+        ?: run {
+            println("Can not read properties")
+            return
+        }
 
-    val knownServerConfig = ServerConfig.Builder()
-        .setPort(port)
-        .setHost("localhost")
+    val selfServerConfig = ServerConfig.Builder()
+        .setPort(discoveryProperties.selfServerPort)
+        .setHost(discoveryProperties.selfServerHost)
         .setTransport(RSocketServer())
         .build()
 
-    val selfConfig = ClientConfig.Builder()
-        .setPort(port)
-        .setHost("localhost")
+    val selfClientConfig = ClientConfig.Builder()
+        .setPort(discoveryProperties.selfClientPort)
+        .setHost(discoveryProperties.selfClientHost)
         .setTransport(RSocketClient())
         .build()
 
-    Discovery(selfConfig, knownServerConfig).start(
+    Discovery(selfClientConfig, selfServerConfig).start(
         ServerConfig.Builder()
-            .setPort(port)
-            .setHost("localhost")
+            .setPort(discoveryProperties.otherServerPort)
+            .setHost(discoveryProperties.otherServerHost)
             .setTransport(RSocketServer())
             .build()
     )
