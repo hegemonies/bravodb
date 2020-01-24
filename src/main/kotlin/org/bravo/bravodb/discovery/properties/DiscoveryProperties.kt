@@ -29,17 +29,18 @@ class DiscoveryProperties private constructor(
     companion object {
         /**
          * Build [DiscoveryProperties]
+         * Reading properties file from classpath.
          * If no find properties, use default values from [DefaultConnectInfo]
          * @return [DiscoveryProperties] after reading properties file.
          * Can return null.
          */
-        fun fromFile(filename: String): DiscoveryProperties? {
-            this::class.java.getResourceAsStream(filename).also {
+        fun fromFile(resourceFilename: String): DiscoveryProperties? {
+            this::class.java.classLoader.getResourceAsStream(resourceFilename).use {
                 val properties = Properties()
                 try {
                     properties.load(it)
                 } catch (e: Exception) {
-                    logger.error("Can not read properties file $filename", e)
+                    logger.error("Can not read properties file $resourceFilename", e)
                     return null
                 }
 
