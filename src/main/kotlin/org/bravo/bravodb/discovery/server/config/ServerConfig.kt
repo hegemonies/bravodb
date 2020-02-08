@@ -13,16 +13,19 @@ class ServerConfig private constructor(
     data class Builder(
         var port: Int = DefaultConnectInfo.PORT,
         var host: String = DefaultConnectInfo.HOST,
-        var transport: ServerTransport = RSocketServer()
+        var transport: Class<in ServerTransport> = RSocketServer.javaClass
     ) {
         fun setPort(port: Int) = apply { this.port = port }
         fun setHost(host: String) = apply { this.host = host }
-        fun setTransport(transport: ServerTransport) = apply {
-            transport.port = port
-            transport.host = host
+        fun setTransport(transport: Class<in ServerTransport>) = apply {
             this.transport = transport
         }
 
-        fun build() = ServerConfig(port, host, transport)
+        fun build(): ServerConfig =
+            ServerConfig(
+                port,
+                host,
+                transport.declaringClass.getConstructor().newInstance() as ServerTransport
+            )
     }
 }

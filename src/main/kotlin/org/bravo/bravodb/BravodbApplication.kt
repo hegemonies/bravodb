@@ -17,7 +17,7 @@ fun main() {
     val selfServerConfig = ServerConfig.Builder()
         .setPort(discoveryProperties.selfServerPort)
         .setHost(discoveryProperties.selfServerHost)
-        .setTransport(RSocketServer())
+        .setTransport(RSocketServer.javaClass)
         .build()
 
     val selfClientConfig = ClientConfig.Builder()
@@ -30,7 +30,7 @@ fun main() {
         ServerConfig.Builder()
             .setPort(discoveryProperties.otherServerPort)
             .setHost(discoveryProperties.otherServerHost)
-            .setTransport(RSocketServer())
+            .setTransport(RSocketServer.javaClass)
             .build()
     )
 }
