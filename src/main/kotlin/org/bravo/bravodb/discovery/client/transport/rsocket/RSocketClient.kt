@@ -9,9 +9,12 @@ import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
 import org.bravo.bravodb.discovery.data.common.AnswerStatus
+import org.bravo.bravodb.discovery.data.common.DataType
 import org.bravo.bravodb.discovery.data.common.InstanceInfo
-import org.bravo.bravodb.discovery.data.registration.Request
-import org.bravo.bravodb.discovery.data.registration.Response
+import org.bravo.bravodb.discovery.data.common.Request
+import org.bravo.bravodb.discovery.data.common.Response
+import org.bravo.bravodb.discovery.data.registration.RegistrationRequest
+import org.bravo.bravodb.discovery.data.registration.RegistrationResponse
 import org.bravo.bravodb.discovery.data.storage.InstanceStorage
 import kotlin.system.exitProcess
 
@@ -35,28 +38,29 @@ class RSocketClient : ClientTransport {
     override suspend fun registrationIn(otherInstance: InstanceInfo): Boolean {
         client ?: initClient(otherInstance.host, otherInstance.port)
 
-        val request = Request(InstanceInfo(host, port)).toJson()
+        val requestBody = RegistrationRequest(InstanceInfo(host, port)).toJson()
+        val request = Request(DataType.REGISTRATION_REQUEST, requestBody).toJson()
 
         client?.run {
             requestResponse(DefaultPayload.create(request))
                 .awaitFirstOrNull()
                 ?.also { payload ->
-                    Response.fromJson(payload.dataUtf8).also { response ->
-                        if (response.status.statusCode == AnswerStatus.OK) {
-                            response.otherInstances?.forEach { instanceInfo ->
+                    val response = Response.fromJson(payload.dataUtf8)
+                    if (response.answer.statusCode == AnswerStatus.OK) {
+                        RegistrationResponse.fromJson(response.body).also { resp ->
+                            resp.otherInstances?.forEach { instanceInfo ->
                                 if (!InstanceStorage.save(instanceInfo)) {
                                     logger.error("Error adding instance info in storage")
                                     return false
                                 }
+                            } ?: also {
+                                logger.error("List of other instances in response on registration is null")
+                                return false
                             }
-                                ?: also {
-                                    logger.error("List of other instances in response on registration is null")
-                                    return false
-                                }
-                        } else {
-                            logger.error("Receive error status on self registration")
-                            return false
                         }
+                    } else {
+                        logger.error("Receive error status on self registration")
+                        return false
                     }
                     logger.info("Response on self registration: ${payload.dataUtf8}")
                 }

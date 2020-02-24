@@ -1,6 +1,6 @@
 package org.bravo.bravodb.discovery.data.common
 
-class Answer(
+data class Answer(
     val statusCode: AnswerStatus,
     val message: String? = null
 )
