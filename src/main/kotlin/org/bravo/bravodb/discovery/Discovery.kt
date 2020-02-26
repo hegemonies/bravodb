@@ -1,5 +1,6 @@
 package org.bravo.bravodb.discovery
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.client.Client
@@ -30,6 +31,19 @@ class Discovery(
 
         bootstrapServer()
         bootstrapClient(otherServerConfig)
+        scheduleReregistration()
+    }
+
+    private suspend fun scheduleReregistration() {
+        while (true) {
+            delay(60 * 1000)
+            InstanceStorage.instances.forEach { instance ->
+                client.registrationIn(InstanceInfo(instance.host, instance.port))
+                    .takeIf { it }.also {
+                        logger.info("Reregistration in $instance is successful")
+                    }
+            }
+        }
     }
 
     /**
