@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.data.common
+package org.bravo.bravodb.data.transport
 
 enum class DataType {
     REGISTRATION_REQUEST,
