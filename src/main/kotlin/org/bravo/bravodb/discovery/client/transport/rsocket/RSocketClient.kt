@@ -6,16 +6,17 @@ import io.rsocket.transport.netty.client.TcpClientTransport
 import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.logging.log4j.LogManager
+import org.bravo.bravodb.data.common.fromJson
+import org.bravo.bravodb.data.registration.RegistrationRequest
+import org.bravo.bravodb.data.registration.RegistrationResponse
+import org.bravo.bravodb.data.storage.InstanceStorage
+import org.bravo.bravodb.data.transport.AnswerStatus
+import org.bravo.bravodb.data.transport.DataType
+import org.bravo.bravodb.data.transport.InstanceInfo
+import org.bravo.bravodb.data.transport.Request
+import org.bravo.bravodb.data.transport.Response
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
 import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
-import org.bravo.bravodb.discovery.data.common.AnswerStatus
-import org.bravo.bravodb.discovery.data.common.DataType
-import org.bravo.bravodb.discovery.data.common.InstanceInfo
-import org.bravo.bravodb.discovery.data.common.Request
-import org.bravo.bravodb.discovery.data.common.Response
-import org.bravo.bravodb.discovery.data.registration.RegistrationRequest
-import org.bravo.bravodb.discovery.data.registration.RegistrationResponse
-import org.bravo.bravodb.discovery.data.storage.InstanceStorage
 import kotlin.system.exitProcess
 
 class RSocketClient : ClientTransport {
@@ -45,9 +46,9 @@ class RSocketClient : ClientTransport {
             requestResponse(DefaultPayload.create(request))
                 .awaitFirstOrNull()
                 ?.also { payload ->
-                    val response = Response.fromJson(payload.dataUtf8)
+                    val response = fromJson<Response>(payload.dataUtf8)
                     if (response.answer.statusCode == AnswerStatus.OK) {
-                        RegistrationResponse.fromJson(response.body).also { resp ->
+                        fromJson<RegistrationResponse>(response.body).also { resp ->
                             resp.otherInstances?.forEach { instanceInfo ->
                                 if (!InstanceStorage.save(instanceInfo)) {
                                     logger.error("Error adding instance info in storage")

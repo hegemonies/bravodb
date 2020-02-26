@@ -1,6 +1,7 @@
-package org.bravo.bravodb.discovery.data.common
+package org.bravo.bravodb.data.transport
 
-import org.bravo.bravodb.discovery.data.registration.RegistrationRequest
+import org.bravo.bravodb.data.common.fromJson
+import org.bravo.bravodb.data.registration.RegistrationRequest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -19,12 +20,12 @@ class RequestTest {
             println(it)
         }
 
-        val request = Request.fromJson(requestJson).also {
+        val request = fromJson<Request>(requestJson).also {
             println(it)
         }
 
         when(request.type) {
-            DataType.REGISTRATION_REQUEST -> println(RegistrationRequest.fromJson(request.body))
+            DataType.REGISTRATION_REQUEST -> println(fromJson<RegistrationRequest>(request.body))
             else -> Assertions.fail()
         }
     }

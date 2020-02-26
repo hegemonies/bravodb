@@ -6,8 +6,8 @@ import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.client.Client
 import org.bravo.bravodb.discovery.client.config.ClientConfig
 import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
-import org.bravo.bravodb.discovery.data.common.InstanceInfo
-import org.bravo.bravodb.discovery.data.storage.InstanceStorage
+import org.bravo.bravodb.data.transport.InstanceInfo
+import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.discovery.server.Server
 import org.bravo.bravodb.discovery.server.config.ServerConfig
 

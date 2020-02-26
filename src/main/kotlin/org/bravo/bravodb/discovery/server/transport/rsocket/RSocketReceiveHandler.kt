@@ -5,15 +5,16 @@ import io.rsocket.Payload
 import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.data.common.Answer
-import org.bravo.bravodb.discovery.data.common.AnswerStatus
-import org.bravo.bravodb.discovery.data.common.DataType
-import org.bravo.bravodb.discovery.data.common.InstanceInfo
-import org.bravo.bravodb.discovery.data.common.Request
-import org.bravo.bravodb.discovery.data.common.Response
-import org.bravo.bravodb.discovery.data.registration.RegistrationRequest
-import org.bravo.bravodb.discovery.data.registration.RegistrationResponse
-import org.bravo.bravodb.discovery.data.storage.InstanceStorage
+import org.bravo.bravodb.data.common.fromJson
+import org.bravo.bravodb.data.registration.RegistrationRequest
+import org.bravo.bravodb.data.registration.RegistrationResponse
+import org.bravo.bravodb.data.storage.InstanceStorage
+import org.bravo.bravodb.data.transport.Answer
+import org.bravo.bravodb.data.transport.AnswerStatus
+import org.bravo.bravodb.data.transport.DataType
+import org.bravo.bravodb.data.transport.InstanceInfo
+import org.bravo.bravodb.data.transport.Request
+import org.bravo.bravodb.data.transport.Response
 import reactor.core.publisher.Mono
 
 class RSocketReceiveHandler : AbstractRSocket() {
@@ -28,10 +29,10 @@ class RSocketReceiveHandler : AbstractRSocket() {
 
             payload?.let {
                 try {
-                    val request = Request.fromJson(it.dataUtf8)
+                    val request = fromJson<Request>(it.dataUtf8)
                     when (request.type) {
                         DataType.REGISTRATION_REQUEST -> {
-                            val requestBody = RegistrationRequest.fromJson(request.body)
+                            val requestBody = fromJson<RegistrationRequest>(request.body)
                             runBlocking {
                                 InstanceStorage.save(
                                     InstanceInfo(

@@ -1,6 +1,6 @@
 package org.bravo.bravodb.discovery.client.transport
 
-import org.bravo.bravodb.discovery.data.common.InstanceInfo
+import org.bravo.bravodb.data.transport.InstanceInfo
 
 interface ClientTransport {
     var port: Int

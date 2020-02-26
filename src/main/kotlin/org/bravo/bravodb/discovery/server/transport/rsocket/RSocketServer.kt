@@ -25,7 +25,7 @@ class RSocketServer : ServerTransport {
                 .start()
                 .awaitFirstOrNull()
                 ?.onClose()
-                ?: logger.error("Error starting RSocket server")
+                ?: logger.error("Error starting RSocket discovery server")
         } catch (e: Exception) {
             logger.error(e)
         }
