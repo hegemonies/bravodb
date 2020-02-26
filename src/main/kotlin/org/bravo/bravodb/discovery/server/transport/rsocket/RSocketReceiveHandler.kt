@@ -29,21 +29,28 @@ class RSocketReceiveHandler : AbstractRSocket() {
             payload?.let {
                 try {
                     val request = Request.fromJson(it.dataUtf8)
-                    if (request.type != DataType.REGISTRATION_REQUEST) {
-                        sink.error(Exception("Data type is not correct"))
-                    }
-                    val requestBody = RegistrationRequest.fromJson(request.body)
-                    runBlocking {
-                        InstanceStorage.save(InstanceInfo(requestBody.instanceInfo.host, requestBody.instanceInfo.port))
-                        InstanceStorage.findAll().let { instancesInfo ->
-                            Response(
-                                Answer(AnswerStatus.OK),
-                                DataType.REGISTRATION_RESPONSE,
-                                RegistrationResponse(instancesInfo).toJson()
-                            ).toJson().let { json ->
-                                sink.success(DefaultPayload.create(json))
+                    when (request.type) {
+                        DataType.REGISTRATION_REQUEST -> {
+                            val requestBody = RegistrationRequest.fromJson(request.body)
+                            runBlocking {
+                                InstanceStorage.save(
+                                    InstanceInfo(
+                                        requestBody.instanceInfo.host,
+                                        requestBody.instanceInfo.port
+                                    )
+                                )
+                                InstanceStorage.findAll().let { instancesInfo ->
+                                    Response(
+                                        Answer(AnswerStatus.OK),
+                                        DataType.REGISTRATION_RESPONSE,
+                                        RegistrationResponse(instancesInfo).toJson()
+                                    ).toJson().let { json ->
+                                        sink.success(DefaultPayload.create(json))
+                                    }
+                                }
                             }
                         }
+                        else -> sink.error(Exception("Data type is not correct"))
                     }
                 } catch (e: Exception) {
                     sink.error(e)
