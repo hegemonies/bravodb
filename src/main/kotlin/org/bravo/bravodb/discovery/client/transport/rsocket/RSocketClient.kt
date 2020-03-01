@@ -53,6 +53,10 @@ class RSocketClient : ClientTransport {
                 ?.also { payload ->
                     val response = fromJson<Response>(payload.dataUtf8)
                     if (response.answer.statusCode == AnswerStatus.OK) {
+                        response.body ?: let {
+                            logger.error("Response body is null")
+                            return false
+                        }
                         fromJson<RegistrationResponse>(response.body).also { resp ->
                             resp.otherInstances?.forEach { instanceInfo ->
                                 if (!InstanceStorage.save(instanceInfo)) {

@@ -42,7 +42,7 @@ class Discovery(
 
     private suspend fun scheduleReregistration() {
         while (true) {
-            delay(60 * 1000)
+            delay(15 * 1000) // 15 seconds
             InstanceStorage.findAll().forEach { instance ->
                 client.registrationIn(instance)
                     .takeIf { it }.also {

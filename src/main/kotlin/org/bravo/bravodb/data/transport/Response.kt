@@ -4,6 +4,6 @@ import org.bravo.bravodb.data.common.JsonConverter
 
 data class Response(
     val answer: Answer,
-    val type: DataType,
-    val body: String
+    val type: DataType? = null,
+    val body: String? = null
 ) : JsonConverter()

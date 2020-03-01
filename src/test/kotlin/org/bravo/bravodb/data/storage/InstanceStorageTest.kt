@@ -20,7 +20,7 @@ class InstanceStorageTest {
     @BeforeEach
     fun cleanStorage() {
         runBlocking {
-            storage.pool.forEach {
+            storage.findAll().forEach {
                 storage.delete(it)
             }
         }
@@ -32,20 +32,20 @@ class InstanceStorageTest {
             storage.save(instanceOne)
             storage.save(instanceThree)
 
-            storage.pool.forEach {
+            storage.findAll().forEach {
                 if (it.port == 1) {
                     storage.save(instanceTwo)
                 }
             }
 
-            assertTrue(storage.pool.contains(instanceOne))
-            assertTrue(storage.pool.contains(instanceTwo))
-            assertTrue(storage.pool.contains(instanceThree))
+            assertTrue(storage.findAll().contains(instanceOne))
+            assertTrue(storage.findAll().contains(instanceTwo))
+            assertTrue(storage.findAll().contains(instanceThree))
         }
     }
 
     @Test
-    fun multithreadTest() {
+    fun multithreadTest() = runBlocking {
         val countRecords = 200
 
         val deferred = GlobalScope.async {
@@ -54,14 +54,12 @@ class InstanceStorageTest {
             }
         }
 
-        runBlocking {
-            ((countRecords / 2)..countRecords).forEach {
-                storage.save(InstanceInfo("$it", it))
-            }
-
-            deferred.await()
+        ((countRecords / 2)..countRecords).forEach {
+            storage.save(InstanceInfo("$it", it))
         }
 
-        assertEquals(storage.pool.size, countRecords)
+        deferred.await()
+
+        assertEquals(storage.findAll().size, countRecords)
     }
 }
