@@ -1,4 +1,4 @@
-package org.bravo.bravodb.data.transport
+package org.bravo.bravodb.data.storage.model
 
 data class InstanceInfo(
     val host: String,
