@@ -10,9 +10,9 @@ import org.bravo.bravodb.data.common.fromJson
 import org.bravo.bravodb.data.registration.RegistrationRequest
 import org.bravo.bravodb.data.registration.RegistrationResponse
 import org.bravo.bravodb.data.storage.InstanceStorage
+import org.bravo.bravodb.data.storage.model.InstanceInfo
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
-import org.bravo.bravodb.data.transport.InstanceInfo
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
@@ -39,7 +39,12 @@ class RSocketClient : ClientTransport {
     override suspend fun registrationIn(otherInstance: InstanceInfo): Boolean {
         client ?: initClient(otherInstance.host, otherInstance.port)
 
-        val requestBody = RegistrationRequest(InstanceInfo(host, port)).toJson()
+        val requestBody = RegistrationRequest(
+            InstanceInfo(
+                host,
+                port
+            )
+        ).toJson()
         val request = Request(DataType.REGISTRATION_REQUEST, requestBody).toJson()
 
         client?.run {

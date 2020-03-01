@@ -12,7 +12,6 @@ import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.transport.Answer
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
-import org.bravo.bravodb.data.transport.InstanceInfo
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
 import reactor.core.publisher.Mono
@@ -35,10 +34,8 @@ class RSocketReceiveHandler : AbstractRSocket() {
                             val requestBody = fromJson<RegistrationRequest>(request.body)
                             runBlocking {
                                 InstanceStorage.save(
-                                    InstanceInfo(
-                                        requestBody.instanceInfo.host,
-                                        requestBody.instanceInfo.port
-                                    )
+                                    requestBody.instanceInfo.host,
+                                    requestBody.instanceInfo.port
                                 )
                                 InstanceStorage.findAll().let { instancesInfo ->
                                     Response(

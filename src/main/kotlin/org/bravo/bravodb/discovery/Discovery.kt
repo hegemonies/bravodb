@@ -3,11 +3,11 @@ package org.bravo.bravodb.discovery
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
+import org.bravo.bravodb.data.storage.InstanceStorage
+import org.bravo.bravodb.data.storage.model.InstanceInfo
 import org.bravo.bravodb.discovery.client.Client
 import org.bravo.bravodb.discovery.client.config.ClientConfig
 import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
-import org.bravo.bravodb.data.transport.InstanceInfo
-import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.discovery.server.Server
 import org.bravo.bravodb.discovery.server.config.ServerConfig
 
@@ -26,8 +26,14 @@ class Discovery(
             return@runBlocking
         }
 
-        InstanceStorage.save(InstanceInfo(clientConfig.host, clientConfig.port))
-        InstanceStorage.save(InstanceInfo(serverConfig.host, serverConfig.port))
+        InstanceStorage.save(
+            clientConfig.host,
+            clientConfig.port
+        )
+        InstanceStorage.save(
+            serverConfig.host,
+            serverConfig.port
+        )
 
         bootstrapServer()
         bootstrapClient(otherServerConfig)
@@ -37,8 +43,8 @@ class Discovery(
     private suspend fun scheduleReregistration() {
         while (true) {
             delay(60 * 1000)
-            InstanceStorage.instances.forEach { instance ->
-                client.registrationIn(InstanceInfo(instance.host, instance.port))
+            InstanceStorage.findAll().forEach { instance ->
+                client.registrationIn(instance)
                     .takeIf { it }.also {
                         logger.info("Reregistration in $instance is successful")
                     }
@@ -61,11 +67,16 @@ class Discovery(
         logger.info("Bootstrap client")
 
         // registration and get info about other instance on first known instance
-        val isRegistration = client.registrationIn(InstanceInfo(otherServerConfig.host, otherServerConfig.port))
+        val isRegistration = client.registrationIn(
+            InstanceInfo(
+                otherServerConfig.host,
+                otherServerConfig.port
+            )
+        )
 
         // registration in got instances
         if (isRegistration) {
-            InstanceStorage.instances
+            InstanceStorage.findAll()
                 .filter {
                     it.host != DefaultConnectInfo.HOST && it.port != DefaultConnectInfo.PORT
                 }

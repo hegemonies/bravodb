@@ -3,7 +3,7 @@ package org.bravo.bravodb.data.storage
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.bravo.bravodb.data.transport.InstanceInfo
+import org.bravo.bravodb.data.storage.model.InstanceInfo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -20,7 +20,7 @@ class InstanceStorageTest {
     @BeforeEach
     fun cleanStorage() {
         runBlocking {
-            storage.instances.forEach {
+            storage.pool.forEach {
                 storage.delete(it)
             }
         }
@@ -32,15 +32,15 @@ class InstanceStorageTest {
             storage.save(instanceOne)
             storage.save(instanceThree)
 
-            storage.instances.forEach {
+            storage.pool.forEach {
                 if (it.port == 1) {
                     storage.save(instanceTwo)
                 }
             }
 
-            assertTrue(storage.instances.contains(instanceOne))
-            assertTrue(storage.instances.contains(instanceTwo))
-            assertTrue(storage.instances.contains(instanceThree))
+            assertTrue(storage.pool.contains(instanceOne))
+            assertTrue(storage.pool.contains(instanceTwo))
+            assertTrue(storage.pool.contains(instanceThree))
         }
     }
 
@@ -62,6 +62,6 @@ class InstanceStorageTest {
             deferred.await()
         }
 
-        assertEquals(storage.instances.size, countRecords)
+        assertEquals(storage.pool.size, countRecords)
     }
 }
