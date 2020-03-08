@@ -17,9 +17,10 @@ object InstanceStorage {
             true
         }
 
-    suspend fun save(host: String, port: Int) = save(InstanceInfo(host, port))
+    suspend fun save(host: String, port: Int) =
+        save(InstanceInfo(host, port))
 
-    private fun instanceExists(instance: InstanceInfo): Boolean {
+    private suspend fun instanceExists(instance: InstanceInfo): Boolean {
         instances.find {
             it == instance
         }.let {
@@ -31,6 +32,16 @@ object InstanceStorage {
     }
 
     suspend fun findAll() = instances
+
+    suspend fun findByHost(host: String) =
+        instances.find {
+            it.host == host
+        }
+
+    suspend fun findByPort(port: Int) =
+        instances.filter {
+            it.port == port
+        }
 
     suspend fun delete(instance: InstanceInfo) = instances.remove(instance)
 }

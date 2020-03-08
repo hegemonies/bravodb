@@ -29,13 +29,7 @@ fun initializeDiscovery() {
             .setTransport(RSocketServer.javaClass)
             .build()
 
-        val selfClientConfig = ClientConfig.Builder()
-            .setPort(discoveryProperties.selfClientPort)
-            .setHost(discoveryProperties.selfClientHost)
-            .setTransport(RSocketClient.javaClass)
-            .build()
-
-        Discovery(selfClientConfig, selfServerConfig).start(
+        Discovery(selfServerConfig).start(
             ServerConfig.Builder()
                 .setPort(discoveryProperties.otherServerPort)
                 .setHost(discoveryProperties.otherServerHost)

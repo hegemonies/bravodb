@@ -3,11 +3,16 @@ package org.bravo.bravodb.database.server.transport.rsocket.handler
 import io.rsocket.AbstractRSocket
 import io.rsocket.Payload
 import io.rsocket.util.DefaultPayload
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
 import org.bravo.bravodb.data.database.AddDataRequest
 import org.bravo.bravodb.data.storage.DataStorage
+import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.transport.Answer
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
@@ -32,11 +37,20 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
                             }
                         }
                         val response = Response(Answer(AnswerStatus.OK))
+                        GlobalScope.launch {
+                            repeatData(requestBody)
+                        }
                         sink.success(DefaultPayload.create(response.toJson()))
                     }
                     else -> sink.error(Exception("Not correct datatype"))
                 }
             } ?: sink.error(Exception("Payload is null"))
+        }
+    }
+
+    private suspend fun repeatData(requestBody: AddDataRequest) {
+        InstanceStorage.findAll().asFlow().collect {
+            // todo: write repeat code on other servers after
         }
     }
 

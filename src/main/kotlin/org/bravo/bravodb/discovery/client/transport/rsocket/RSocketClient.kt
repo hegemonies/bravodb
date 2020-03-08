@@ -16,14 +16,11 @@ import org.bravo.bravodb.data.transport.DataType
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
 import org.bravo.bravodb.discovery.client.transport.ClientTransport
-import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
 import kotlin.system.exitProcess
 
 class RSocketClient : ClientTransport {
 
     private var client: RSocket? = null
-    override var port: Int = DefaultConnectInfo.PORT
-    override var host: String = DefaultConnectInfo.HOST
 
     private suspend fun initClient(host: String, port: Int) {
         client = RSocketFactory.connect()
@@ -36,8 +33,8 @@ class RSocketClient : ClientTransport {
         }
     }
 
-    override suspend fun registrationIn(otherInstance: InstanceInfo): Boolean {
-        client ?: initClient(otherInstance.host, otherInstance.port)
+    override suspend fun registration(host: String, port: Int): Boolean {
+        client ?: initClient(host, port)
 
         val requestBody = RegistrationRequest(
             InstanceInfo(
