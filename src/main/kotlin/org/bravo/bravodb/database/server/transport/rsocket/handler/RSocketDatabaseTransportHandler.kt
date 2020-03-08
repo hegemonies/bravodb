@@ -2,6 +2,7 @@ package org.bravo.bravodb.database.server.transport.rsocket.handler
 
 import io.rsocket.AbstractRSocket
 import io.rsocket.Payload
+import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
@@ -18,10 +19,10 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
 
     override fun requestResponse(payload: Payload?): Mono<Payload> {
         return Mono.create { sink ->
-            payload?.also {
-                logger.info("Receive data: ${payload.dataUtf8}")
+            payload?.dataUtf8?.also {
+                logger.info("Receive data: $it")
 
-                val request = fromJson<Request>(payload.dataUtf8)
+                val request = fromJson<Request>(it)
                 when (request.type) {
                     DataType.ADD_DATA_REQUEST -> {
                         val requestBody = fromJson<AddDataRequest>(request.body)
@@ -31,7 +32,7 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
                             }
                         }
                         val response = Response(Answer(AnswerStatus.OK))
-                        sink.success()
+                        sink.success(DefaultPayload.create(response.toJson()))
                     }
                     else -> sink.error(Exception("Not correct datatype"))
                 }
