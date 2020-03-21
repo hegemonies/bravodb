@@ -2,8 +2,6 @@ package org.bravo.bravodb
 
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.Discovery
-import org.bravo.bravodb.discovery.client.config.ClientConfig
-import org.bravo.bravodb.discovery.client.transport.rsocket.RSocketClient
 import org.bravo.bravodb.discovery.properties.DiscoveryProperties
 import org.bravo.bravodb.discovery.server.config.ServerConfig
 import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServer
@@ -29,13 +27,13 @@ fun initializeDiscovery() {
             .setTransport(RSocketServer.javaClass)
             .build()
 
-        Discovery(selfServerConfig).start(
-            ServerConfig.Builder()
-                .setPort(discoveryProperties.otherServerPort)
-                .setHost(discoveryProperties.otherServerHost)
-                .setTransport(RSocketServer.javaClass)
-                .build()
-        )
+        val configOtherServer = ServerConfig.Builder()
+            .setPort(discoveryProperties.otherServerPort)
+            .setHost(discoveryProperties.otherServerHost)
+            .setTransport(RSocketServer.javaClass)
+            .build()
+
+        Discovery(selfServerConfig).start(configOtherServer)
     }.also {
         logger.info("Discovery start by $it millis")
     }

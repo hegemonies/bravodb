@@ -16,37 +16,40 @@ class Discovery(
 ) {
     private val server = Server(serverConfig)
 
-    fun start(otherServerConfig: ServerConfig) = runBlocking {
+    fun start(configOtherServer: ServerConfig) = runBlocking {
         logger.info("Discovery start")
 
-        if (serverConfig::class.java != otherServerConfig::class.java) {
-            logger.error("Type of server config and other known server config not equal: ${serverConfig::class.java} != ${otherServerConfig::class.java}")
+        if (serverConfig::class.java != configOtherServer::class.java) {
+            logger.error(
+                "Type of server config and other known server config not equal:" +
+                    " ${serverConfig::class.java} != ${configOtherServer::class.java}"
+            )
             return@runBlocking
         }
 
-        InstanceStorage.save(
-            serverConfig.host,
-            serverConfig.port
-        )
-        InstanceStorage.save(
-            otherServerConfig.host,
-            otherServerConfig.port
-        )
-
         bootstrapServer()
-        bootstrapClient(otherServerConfig)
+        if (configOtherServer.host != serverConfig.host && configOtherServer.port != serverConfig.port) {
+            InstanceStorage.save(
+                configOtherServer.host,
+                configOtherServer.port
+            )
+            firstRegistration(configOtherServer)
+        }
         scheduleReregistration()
     }
 
     private suspend fun scheduleReregistration() {
         while (true) {
             delay(15 * 1000) // 15 seconds
+            logger.info("Start re-registration")
             InstanceStorage.findAll().forEach { instance ->
-                instance.client.registration()
-                    .takeIf { it }.also {
-                        logger.info("Reregistration in $instance is successful")
-                    }
+                if (instance.client.registration()) {
+                    logger.info("Reregistration in $instance is successfully")
+                } else {
+                    logger.error("Reregistration in $instance is bad")
+                }
             }
+            logger.info("Finish re-registration")
         }
     }
 
@@ -61,8 +64,9 @@ class Discovery(
     /**
      * Do self registration on other same servers
      */
-    private suspend fun bootstrapClient(otherServerConfig: ServerConfig) {
-        logger.info("Bootstrap client")
+    private suspend fun firstRegistration(otherServerConfig: ServerConfig) {
+        logger.info("First registration start")
+
 
         // registration and get info about other instance on first known instance
         val isRegistration = InstanceStorage.findByHost(otherServerConfig.host)?.client?.registration()
@@ -75,13 +79,17 @@ class Discovery(
             InstanceStorage.findAll().asFlow()
                 .filter { instance ->
                     instance.host != DefaultConnectInfo.HOST && instance.port != DefaultConnectInfo.PORT
+                        && instance.host != otherServerConfig.host && instance.port != otherServerConfig.port
                 }
                 .collect { instance ->
                     if (!instance.client.registration()) {
-                        logger.error("Can not registration in instance $instance")
+                        logger.error("Can not registration in instance ${instance.host}:${instance.port}")
                     }
                 }
+        } else {
+            logger.error("Can not registration in instance ${otherServerConfig.host}:${otherServerConfig.port}")
         }
+        logger.info("First registration start")
     }
 
     companion object {

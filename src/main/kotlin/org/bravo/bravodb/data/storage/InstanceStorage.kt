@@ -31,7 +31,7 @@ object InstanceStorage {
         }
     }
 
-    suspend fun findAll() = instances
+    fun findAll() = instances
 
     suspend fun findByHost(host: String) =
         instances.find {

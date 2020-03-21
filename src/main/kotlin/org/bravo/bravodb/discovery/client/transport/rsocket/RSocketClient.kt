@@ -28,8 +28,8 @@ class RSocketClient : ClientTransport {
             .start()
             .awaitFirstOrNull()
         client ?: also {
-            logger.error("Error init RSocketClient")
-            exitProcess(1)
+            logger.error("Error init RSocketClient during connection to $host:$port")
+            // exitProcess(1)
         }
     }
 
