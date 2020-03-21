@@ -1,7 +1,7 @@
 package org.bravo.bravodb.discovery.properties
 
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
+import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
 import java.util.*
 
 /**
@@ -30,7 +30,7 @@ class DiscoveryProperties private constructor(
         /**
          * Build [DiscoveryProperties]
          * Reading properties file from classpath.
-         * If no find properties, use default values from [DefaultConnectInfo]
+         * If no find properties, use default values from [DefaultDiscoveryConnectInfo]
          * @return [DiscoveryProperties] after reading properties file.
          * Can return null.
          */
@@ -46,32 +46,32 @@ class DiscoveryProperties private constructor(
 
                 val selfClientHost = properties.getProperty(
                     "bravodb.discovery.client.self.host",
-                    DefaultConnectInfo.HOST
+                    DefaultDiscoveryConnectInfo.HOST
                 )
 
                 val selfClientPort = properties.getProperty(
                     "bravodb.discovery.client.self.port",
-                    DefaultConnectInfo.PORT.toString()
+                    DefaultDiscoveryConnectInfo.PORT.toString()
                 ).toInt()
 
                 val selfServerHost = properties.getProperty(
                     "bravodb.discovery.server.self.host",
-                    DefaultConnectInfo.HOST
+                    DefaultDiscoveryConnectInfo.HOST
                 )
 
                 val selfServerPort = properties.getProperty(
                     "bravodb.discovery.server.self.port",
-                    DefaultConnectInfo.PORT.toString()
+                    DefaultDiscoveryConnectInfo.PORT.toString()
                 ).toInt()
 
                 val otherServerHost = properties.getProperty(
                     "bravodb.discovery.server.other.host",
-                    DefaultConnectInfo.OTHER_SERVER_HOST
+                    DefaultDiscoveryConnectInfo.OTHER_SERVER_HOST
                 )
 
                 val otherServerPort = properties.getProperty(
                     "bravodb.discovery.server.other.port",
-                    DefaultConnectInfo.OTHER_SERVER_PORT.toString()
+                    DefaultDiscoveryConnectInfo.OTHER_SERVER_PORT.toString()
                 ).toInt()
 
                 return DiscoveryProperties(

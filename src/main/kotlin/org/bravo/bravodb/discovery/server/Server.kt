@@ -3,22 +3,22 @@ package org.bravo.bravodb.discovery.server
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.server.config.ServerConfig
+import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
 
 /**
  * Discovery server
  */
 class Server(
-    private val config: ServerConfig
+    private val discoveryConfig: ServerDiscoveryConfig
 ) {
 
-    private val transport = config.transport
+    private val transport = discoveryConfig.discoveryTransport
 
     /**
      * Async start server
      */
     suspend fun start() {
-        logger.info("Bootstrap discovery server start on port ${config.port}")
+        logger.info("Bootstrap discovery server start on port ${discoveryConfig.port}")
         GlobalScope.launch {
             bootstrap()
         }

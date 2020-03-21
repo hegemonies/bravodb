@@ -7,33 +7,33 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.storage.InstanceStorage
-import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
+import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
 import org.bravo.bravodb.discovery.server.Server
-import org.bravo.bravodb.discovery.server.config.ServerConfig
+import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
 
 class Discovery(
-    private val serverConfig: ServerConfig
+    private val serverDiscoveryConfig: ServerDiscoveryConfig
 ) {
-    private val server = Server(serverConfig)
+    private val server = Server(serverDiscoveryConfig)
 
-    fun start(configOtherServer: ServerConfig) = runBlocking {
+    fun start(configOtherServerDiscovery: ServerDiscoveryConfig) = runBlocking {
         logger.info("Discovery start")
 
-        if (serverConfig::class.java != configOtherServer::class.java) {
+        if (serverDiscoveryConfig::class.java != configOtherServerDiscovery::class.java) {
             logger.error(
                 "Type of server config and other known server config not equal:" +
-                    " ${serverConfig::class.java} != ${configOtherServer::class.java}"
+                    " ${serverDiscoveryConfig::class.java} != ${configOtherServerDiscovery::class.java}"
             )
             return@runBlocking
         }
 
         bootstrapServer()
-        if (configOtherServer.host != serverConfig.host && configOtherServer.port != serverConfig.port) {
+        if (configOtherServerDiscovery.host != serverDiscoveryConfig.host && configOtherServerDiscovery.port != serverDiscoveryConfig.port) {
             InstanceStorage.save(
-                configOtherServer.host,
-                configOtherServer.port
+                configOtherServerDiscovery.host,
+                configOtherServerDiscovery.port
             )
-            firstRegistration(configOtherServer)
+            firstRegistration(configOtherServerDiscovery)
         }
         scheduleReregistration()
     }
@@ -64,13 +64,15 @@ class Discovery(
     /**
      * Do self registration on other same servers
      */
-    private suspend fun firstRegistration(otherServerConfig: ServerConfig) {
+    private suspend fun firstRegistration(otherServerDiscoveryConfig: ServerDiscoveryConfig) {
         logger.info("First registration start")
 
-
         // registration and get info about other instance on first known instance
-        val isRegistration = InstanceStorage.findByHost(otherServerConfig.host)?.client?.registration()
-            ?: logger.info("Can not find $otherServerConfig").let {
+        val isRegistration = InstanceStorage.findByHostAndPort(
+            otherServerDiscoveryConfig.host,
+            otherServerDiscoveryConfig.port
+        )?.client?.registration()
+            ?: logger.info("Can not find $otherServerDiscoveryConfig").let {
                 return
             }
 
@@ -78,8 +80,8 @@ class Discovery(
         if (isRegistration) {
             InstanceStorage.findAll().asFlow()
                 .filter { instance ->
-                    instance.host != DefaultConnectInfo.HOST && instance.port != DefaultConnectInfo.PORT
-                        && instance.host != otherServerConfig.host && instance.port != otherServerConfig.port
+                    instance.host != DefaultDiscoveryConnectInfo.HOST && instance.port != DefaultDiscoveryConnectInfo.PORT
+                        && instance.host != otherServerDiscoveryConfig.host && instance.port != otherServerDiscoveryConfig.port
                 }
                 .collect { instance ->
                     if (!instance.client.registration()) {
@@ -87,7 +89,7 @@ class Discovery(
                     }
                 }
         } else {
-            logger.error("Can not registration in instance ${otherServerConfig.host}:${otherServerConfig.port}")
+            logger.error("Can not registration in instance ${otherServerDiscoveryConfig.host}:${otherServerDiscoveryConfig.port}")
         }
         logger.info("First registration start")
     }

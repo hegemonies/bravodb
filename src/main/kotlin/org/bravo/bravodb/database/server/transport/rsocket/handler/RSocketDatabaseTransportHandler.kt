@@ -10,9 +10,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
-import org.bravo.bravodb.data.database.AddDataRequest
+import org.bravo.bravodb.data.database.SendDataUnit
 import org.bravo.bravodb.data.storage.DataStorage
 import org.bravo.bravodb.data.storage.InstanceStorage
+import org.bravo.bravodb.data.storage.model.DataUnit
 import org.bravo.bravodb.data.transport.Answer
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
@@ -27,30 +28,34 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
             payload?.dataUtf8?.also {
                 logger.info("Receive data: $it")
 
-                val request = fromJson<Request>(it)
-                when (request.type) {
-                    DataType.ADD_DATA_REQUEST -> {
-                        val requestBody = fromJson<AddDataRequest>(request.body)
+                runCatching {
+                    val request = fromJson<Request>(it)
+
+                    if (request.type != DataType.SEND_DATA) {
+                        logger.error("Received not correct datatype")
+                        sink.error(Exception("Not correct datatype"))
+                    } else {
+                        val requestBody = fromJson<SendDataUnit>(request.body)
                         runBlocking {
-                            if (!DataStorage.save(requestBody.key, requestBody.value)) {
-                                sink.error(Exception("Can not save data"))
-                            }
+                            DataStorage.save(requestBody.key, requestBody.value)
                         }
-                        val response = Response(Answer(AnswerStatus.OK))
                         GlobalScope.launch {
-                            repeatData(requestBody)
-                        }
+                            replicationData(requestBody)
+                        }.start()
+                        val response = Response(Answer(AnswerStatus.OK))
                         sink.success(DefaultPayload.create(response.toJson()))
                     }
-                    else -> sink.error(Exception("Not correct datatype"))
+                }.getOrElse { error ->
+                    sink.error(error)
                 }
             } ?: sink.error(Exception("Payload is null"))
         }
     }
 
-    private suspend fun repeatData(requestBody: AddDataRequest) {
+    private suspend fun replicationData(unitBody: SendDataUnit) {
+        val data = DataUnit(unitBody.key, unitBody.value)
         InstanceStorage.findAll().asFlow().collect {
-            // todo: write repeat code on other servers after
+            it.client.sendData(data)
         }
     }
 

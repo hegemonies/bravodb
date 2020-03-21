@@ -33,15 +33,20 @@ object InstanceStorage {
 
     fun findAll() = instances
 
-    suspend fun findByHost(host: String) =
-        instances.find {
+    fun findByHost(host: String) =
+        instances.filter {
             it.host == host
         }
 
-    suspend fun findByPort(port: Int) =
+    fun findByPort(port: Int) =
         instances.filter {
             it.port == port
         }
 
-    suspend fun delete(instance: InstanceInfo) = instances.remove(instance)
+    fun findByHostAndPort(host: String, port: Int) =
+        instances.find {
+            it.host == host && it.port == port
+        }
+
+    fun delete(instance: InstanceInfo) = instances.remove(instance)
 }

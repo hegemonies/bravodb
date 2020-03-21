@@ -3,8 +3,8 @@ package org.bravo.bravodb
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.Discovery
 import org.bravo.bravodb.discovery.properties.DiscoveryProperties
-import org.bravo.bravodb.discovery.server.config.ServerConfig
-import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServer
+import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
+import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServerDiscovery
 import kotlin.system.measureTimeMillis
 
 private val logger = LogManager.getLogger()
@@ -21,16 +21,16 @@ fun initializeDiscovery() {
                 return
             }
 
-        val selfServerConfig = ServerConfig.Builder()
+        val selfServerConfig = ServerDiscoveryConfig.Builder()
             .setPort(discoveryProperties.selfServerPort)
             .setHost(discoveryProperties.selfServerHost)
-            .setTransport(RSocketServer.javaClass)
+            .setTransport(RSocketServerDiscovery.javaClass)
             .build()
 
-        val configOtherServer = ServerConfig.Builder()
+        val configOtherServer = ServerDiscoveryConfig.Builder()
             .setPort(discoveryProperties.otherServerPort)
             .setHost(discoveryProperties.otherServerHost)
-            .setTransport(RSocketServer.javaClass)
+            .setTransport(RSocketServerDiscovery.javaClass)
             .build()
 
         Discovery(selfServerConfig).start(configOtherServer)
