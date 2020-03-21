@@ -7,14 +7,14 @@ import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.server.TcpServerTransport
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.consts.DefaultConnectInfo
-import org.bravo.bravodb.discovery.server.transport.ServerTransport
+import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
+import org.bravo.bravodb.discovery.server.transport.ServerDiscoveryTransport
 import reactor.core.publisher.Mono
 
-class RSocketServer : ServerTransport {
+class RSocketServerDiscovery : ServerDiscoveryTransport {
 
-    override var port: Int = DefaultConnectInfo.PORT
-    override var host: String = DefaultConnectInfo.HOST
+    override var port: Int = DefaultDiscoveryConnectInfo.PORT
+    override var host: String = DefaultDiscoveryConnectInfo.HOST
 
     override suspend fun start() {
         try {
