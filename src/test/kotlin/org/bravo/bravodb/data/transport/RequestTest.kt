@@ -2,7 +2,7 @@ package org.bravo.bravodb.data.transport
 
 import org.bravo.bravodb.data.common.fromJson
 import org.bravo.bravodb.data.registration.RegistrationRequest
-import org.bravo.bravodb.data.storage.model.InstanceInfo
+import org.bravo.bravodb.data.storage.model.InstanceInfoView
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -11,7 +11,7 @@ class RequestTest {
     @Test
     fun `simple test`() {
         val data = RegistrationRequest(
-            InstanceInfo(
+            InstanceInfoView(
                 "localhost",
                 7777
             )
