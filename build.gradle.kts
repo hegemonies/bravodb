@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.3.70"
-    id("java")
+    java
     id("com.google.cloud.tools.jib") version "2.1.0"
 }
 
@@ -40,13 +40,14 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-// jar {
-//     manifest {
-//         attributes(
-//             'Main-Class': 'com.mypackage.MyClass'
-//         )
-//     }
-// }
+tasks.jar {
+    manifest {
+        attributes(
+            Pair("Main-Class", "org.bravo.bravodb.BravodbApplicationKt")
+        )
+    }
+}
+
 
 jib {
     container {
