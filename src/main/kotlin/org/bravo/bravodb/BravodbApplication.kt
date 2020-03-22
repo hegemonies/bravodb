@@ -30,13 +30,21 @@ fun initializeDiscovery() {
             .setTransport(RSocketServerDiscovery.javaClass)
             .build()
 
-        val configOtherServer = ServerDiscoveryConfig.Builder()
-            .setPort(discoveryProperties.otherServerPort)
-            .setHost(discoveryProperties.otherServerHost)
-            .setTransport(RSocketServerDiscovery.javaClass)
-            .build()
+        val configOtherServer = if (discoveryProperties.otherServerHost != null
+            && discoveryProperties.otherServerPort != null
+        ) {
+            ServerDiscoveryConfig.Builder()
+                .setPort(discoveryProperties.otherServerPort)
+                .setHost(discoveryProperties.otherServerHost)
+                .setTransport(RSocketServerDiscovery.javaClass)
+                .build()
+        } else {
+            null
+        }
 
-        Discovery(selfServerConfig).start(configOtherServer)
+        configOtherServer?.let {
+            Discovery(selfServerConfig).start(it)
+        } ?: Discovery(selfServerConfig).start()
     }.also {
         logger.info("Discovery start by $it millis")
     }

@@ -3,6 +3,8 @@ package org.bravo.bravodb.discovery.server.transport.rsocket
 import io.rsocket.AbstractRSocket
 import io.rsocket.Payload
 import io.rsocket.util.DefaultPayload
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
@@ -33,13 +35,16 @@ class RSocketReceiveHandler : AbstractRSocket() {
                     if (request.type == DataType.REGISTRATION_REQUEST) {
                         val requestBody = fromJson<RegistrationRequest>(request.body)
                         runBlocking {
-                            InstanceStorage.save(
-                                requestBody.instanceInfo.host,
-                                requestBody.instanceInfo.port
-                            )
+                            GlobalScope.launch {
+                                InstanceStorage.save(
+                                    requestBody.instanceInfo.host,
+                                    requestBody.instanceInfo.port
+                                )
+                            }.start()
                             InstanceStorage.findAll().map { instanceInfo ->
                                 instanceInfo.toView()
                             }.let { instancesInfoViewList ->
+                                logger.info("Send list: $instancesInfoViewList")
                                 Response(
                                     Answer(AnswerStatus.OK),
                                     DataType.REGISTRATION_RESPONSE,

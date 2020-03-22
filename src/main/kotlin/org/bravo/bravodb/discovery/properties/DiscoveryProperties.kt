@@ -3,6 +3,7 @@ package org.bravo.bravodb.discovery.properties
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
 import java.util.*
+import kotlin.math.log
 import kotlin.system.exitProcess
 
 /**
@@ -18,8 +19,8 @@ data class DiscoveryProperties private constructor(
     val selfServerHost: String,
     val selfServerPort: Int,
 
-    val otherServerHost: String,
-    val otherServerPort: Int
+    val otherServerHost: String?,
+    val otherServerPort: Int?
 ) {
 
     companion object {
@@ -68,16 +69,17 @@ data class DiscoveryProperties private constructor(
         }
 
         fun fromEnvironments(): DiscoveryProperties {
-            return DiscoveryProperties(
-                System.getenv("bravodb.discovery.server.self.host")
-                    ?: errorLog("Self host must be set"),
-                System.getenv("bravodb.discovery.server.self.port")?.toInt()
-                    ?: errorLog("Self port must be set"),
-                System.getenv("bravodb.discovery.server.other.host")
-                    ?: errorLog("Host other server must be set"),
-                System.getenv("bravodb.discovery.server.other.port")?.toInt()
-                    ?: errorLog("Port other server must be set")
-            )
+            val selfHost = System.getenv("bravodb.discovery.server.self.host")
+                ?: errorLog("Self host must be set")
+            val selfPort = System.getenv("bravodb.discovery.server.self.port")?.toInt()
+                ?: errorLog("Self port must be set")
+
+            val otherHost = System.getenv("bravodb.discovery.server.other.host")
+            otherHost ?: logger.warn("Host other instance does not set")
+            val otherPort = System.getenv("bravodb.discovery.server.other.port")?.toInt()
+            otherPort ?: logger.warn("Port other instance does not set")
+
+            return DiscoveryProperties(selfHost, selfPort, otherHost, otherPort)
         }
 
         private fun errorLog(message: String): Nothing {

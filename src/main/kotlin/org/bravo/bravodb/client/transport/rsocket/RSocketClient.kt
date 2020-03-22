@@ -2,6 +2,7 @@ package org.bravo.bravodb.client.transport.rsocket
 
 import io.rsocket.RSocket
 import io.rsocket.RSocketFactory
+import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.client.TcpClientTransport
 import io.rsocket.util.DefaultPayload
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -20,6 +21,7 @@ import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
+import java.time.Duration
 
 class RSocketClient(
     override val host: String,
@@ -42,15 +44,19 @@ class RSocketClient(
                 }
             }
         }
+        logger.info("Finish connect to $host:$port")
     }
 
     override suspend fun connect(): Boolean {
         runCatching {
             client = RSocketFactory.connect()
+                .keepAlive(Duration.ofSeconds(2), Duration.ofSeconds(2), 1)
+                .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .transport(TcpClientTransport.create(host, port))
                 .start()
                 .awaitFirstOrNull()
         }.getOrElse {
+            logger.error(it.message)
             return false
         }
         return client != null
@@ -77,6 +83,7 @@ class RSocketClient(
         client?.requestResponse(DefaultPayload.create(request))
             ?.awaitFirstOrNull()
             ?.also { payload ->
+                logger.info("Received response: ${payload.dataUtf8}")
                 val response = fromJson<Response>(payload.dataUtf8)
 
                 if (response.answer.statusCode == AnswerStatus.OK) {

@@ -17,17 +17,18 @@ class RSocketServerDiscovery : ServerDiscoveryTransport {
     override var host: String = DefaultDiscoveryConnectInfo.HOST
 
     override suspend fun start() {
-        try {
+        runCatching {
             RSocketFactory.receive()
                 .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .acceptor(this::receiveHandler)
                 .transport(TcpServerTransport.create(port))
                 .start()
                 .awaitFirstOrNull()
-                ?.onClose()
+                // ?.onClose()
+                // ?.awaitFirstOrNull()
                 ?: logger.error("Error starting RSocket discovery server")
-        } catch (e: Exception) {
-            logger.error(e)
+        }.getOrElse {
+            logger.error(it)
         }
     }
 

@@ -17,6 +17,7 @@ class Discovery(
     private val server = Server(serverDiscoveryConfig)
 
     fun start(configOtherServerDiscovery: ServerDiscoveryConfig) = runBlocking {
+        InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
         logger.info("Discovery start")
 
         if (serverDiscoveryConfig::class.java != configOtherServerDiscovery::class.java) {
@@ -39,6 +40,13 @@ class Discovery(
             )
         }
 
+        scheduleReregistration()
+    }
+
+    fun start() = runBlocking {
+        InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
+        logger.info("Discovery start")
+        bootstrapServer()
         scheduleReregistration()
     }
 
@@ -69,8 +77,9 @@ class Discovery(
      * Start server for to receive registration and to send known hosts
      */
     private suspend fun bootstrapServer() {
-        logger.info("Bootstrap server")
+        logger.info("Start bootstrap server")
         server.start()
+        logger.info("Finish bootstrap server")
     }
 
     /**

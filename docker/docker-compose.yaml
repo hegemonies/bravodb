@@ -7,8 +7,6 @@ services:
     environment:
       - bravodb.discovery.server.self.host=bravodb1
       - bravodb.discovery.server.self.port=8919
-      - bravodb.discovery.server.other.host=bravodb2
-      - bravodb.discovery.server.other.port=8919
     networks:
       - bravo-network
 

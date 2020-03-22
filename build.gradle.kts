@@ -21,8 +21,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    implementation("io.rsocket:rsocket-core:1.0.0-RC5")
-    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC5")
+    implementation("io.rsocket:rsocket-core:1.0.0-RC6")
+    implementation("io.rsocket:rsocket-transport-netty:1.0.0-RC6")
 
     implementation("org.apache.logging.log4j", "log4j-api", "2.13.0")
     implementation("org.apache.logging.log4j", "log4j-core", "2.13.0")

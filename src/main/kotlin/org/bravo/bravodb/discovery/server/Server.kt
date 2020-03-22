@@ -19,9 +19,9 @@ class Server(
      */
     suspend fun start() {
         logger.info("Bootstrap discovery server start on port ${discoveryConfig.port}")
-        GlobalScope.launch {
-            bootstrap()
-        }
+        // GlobalScope.launch {
+        bootstrap()
+        // }.start()
     }
 
     private suspend fun bootstrap() {
