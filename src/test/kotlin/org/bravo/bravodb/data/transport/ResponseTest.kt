@@ -7,7 +7,7 @@ internal class ResponseTest {
 
     @Test
     fun `simple test`() {
-        val responseJson = Response(Answer(AnswerStatus.OK, ""), DataType.SEND_DATA, "").toJson()
+        val responseJson = Response(Answer(AnswerStatus.OK, ""), DataType.PUT_DATA, "").toJson()
         println(responseJson)
         val responseOrigin = fromJson<Response>(responseJson)
         println(responseOrigin)

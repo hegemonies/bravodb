@@ -10,12 +10,12 @@ import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.client.transport.Client
 import org.bravo.bravodb.data.common.fromJson
-import org.bravo.bravodb.data.database.SendDataUnit
+import org.bravo.bravodb.data.database.GetDataUnit
+import org.bravo.bravodb.data.database.PutDataUnit
 import org.bravo.bravodb.data.registration.RegistrationRequest
 import org.bravo.bravodb.data.registration.RegistrationResponse
 import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.storage.model.DataUnit
-import org.bravo.bravodb.data.storage.model.InstanceInfo
 import org.bravo.bravodb.data.storage.model.InstanceInfoView
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
@@ -120,22 +120,56 @@ class RSocketClient(
         return true
     }
 
-    override suspend fun sendData(unit: DataUnit) {
-        val requestBody = SendDataUnit(unit.key, unit.value).toJson()
-        val request = Request(DataType.SEND_DATA, requestBody).toJson()
+    override suspend fun putData(unit: DataUnit): Boolean {
+        val requestBody = PutDataUnit(unit.key, unit.value).toJson()
+        val request = Request(DataType.PUT_DATA, requestBody).toJson()
 
-        val payload = client?.requestResponse(DefaultPayload.create(request))?.awaitFirstOrNull()?.dataUtf8
-            ?: let {
+        val payload = client?.requestResponse(DefaultPayload.create(request))
+            ?.awaitFirstOrNull()
+            ?.dataUtf8
+            ?: run {
                 logger.error("Cannot send data to $host:$port: client not connection")
-                return
+                return false
             }
 
         val response = fromJson<Response>(payload)
+
         if (response.answer.statusCode != AnswerStatus.OK) {
             logger.error("Received not success response: ${response.answer.message}")
+            return false
         }
-        if (response.type != DataType.SEND_DATA) {
+        if (response.type != DataType.PUT_DATA) {
             logger.error("Data type in response is not DataType.SEND_DATA_RESPONSE")
+            return false
+        }
+
+        return true
+    }
+
+    override suspend fun getData(key: String): DataUnit? {
+        val requestBody = GetDataUnit(key).toJson()
+        val request = Request(DataType.GET_DATA, requestBody).toJson()
+
+        val payload = client?.requestResponse(DefaultPayload.create(request))
+            ?.awaitFirstOrNull()
+            ?: run {
+                logger.error("Cannot get data from $host:$port")
+                return null
+            }
+
+        val response = fromJson<Response>(payload.dataUtf8)
+
+        if (response.answer.statusCode != AnswerStatus.OK) {
+            logger.error(response.answer.message)
+            return null
+        }
+        if (response.type != DataType.GET_DATA) {
+            logger.error("Not correct data type received")
+            return null
+        }
+
+        return response.body?.let {
+            fromJson<DataUnit>(it)
         }
     }
 

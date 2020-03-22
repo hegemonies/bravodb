@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
-import org.bravo.bravodb.data.database.SendDataUnit
+import org.bravo.bravodb.data.database.PutDataUnit
 import org.bravo.bravodb.data.storage.DataStorage
 import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.storage.model.DataUnit
@@ -31,11 +31,11 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
                 runCatching {
                     val request = fromJson<Request>(it)
 
-                    if (request.type != DataType.SEND_DATA) {
+                    if (request.type != DataType.PUT_DATA) {
                         logger.error("Received not correct datatype")
                         sink.error(Exception("Not correct datatype"))
                     } else {
-                        val requestBody = fromJson<SendDataUnit>(request.body)
+                        val requestBody = fromJson<PutDataUnit>(request.body)
                         runBlocking {
                             DataStorage.save(requestBody.key, requestBody.value)
                         }
@@ -52,10 +52,10 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
         }
     }
 
-    private suspend fun replicationData(unitBody: SendDataUnit) {
+    private suspend fun replicationData(unitBody: PutDataUnit) {
         val data = DataUnit(unitBody.key, unitBody.value)
         InstanceStorage.findAll().asFlow().collect {
-            it.client.sendData(data)
+            it.client.putData(data)
         }
     }
 

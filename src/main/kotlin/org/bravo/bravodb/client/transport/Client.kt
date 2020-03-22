@@ -8,5 +8,6 @@ interface Client {
 
     suspend fun connect(): Boolean
     suspend fun registration(selfHost: String, selfPort: Int): Boolean
-    suspend fun sendData(unit: DataUnit)
+    suspend fun putData(unit: DataUnit)
+    suspend fun getData(key: String): DataUnit?
 }
