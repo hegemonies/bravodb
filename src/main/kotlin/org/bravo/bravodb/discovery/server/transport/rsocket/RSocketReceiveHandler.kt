@@ -29,26 +29,28 @@ class RSocketReceiveHandler : AbstractRSocket() {
             payload?.let {
                 try {
                     val request = fromJson<Request>(it.dataUtf8)
-                    when (request.type) {
-                        DataType.REGISTRATION_REQUEST -> {
-                            val requestBody = fromJson<RegistrationRequest>(request.body)
-                            runBlocking {
-                                InstanceStorage.save(
-                                    requestBody.instanceInfo.host,
-                                    requestBody.instanceInfo.port
-                                )
-                                InstanceStorage.findAll().let { instancesInfo ->
-                                    Response(
-                                        Answer(AnswerStatus.OK),
-                                        DataType.REGISTRATION_RESPONSE,
-                                        RegistrationResponse(instancesInfo).toJson()
-                                    ).toJson().let { json ->
-                                        sink.success(DefaultPayload.create(json))
-                                    }
+
+                    if (request.type == DataType.REGISTRATION_REQUEST) {
+                        val requestBody = fromJson<RegistrationRequest>(request.body)
+                        runBlocking {
+                            InstanceStorage.save(
+                                requestBody.instanceInfo.host,
+                                requestBody.instanceInfo.port
+                            )
+                            InstanceStorage.findAll().map { instanceInfo ->
+                                instanceInfo.toView()
+                            }.let { instancesInfoViewList ->
+                                Response(
+                                    Answer(AnswerStatus.OK),
+                                    DataType.REGISTRATION_RESPONSE,
+                                    RegistrationResponse(instancesInfoViewList).toJson()
+                                ).toJson().let { json ->
+                                    sink.success(DefaultPayload.create(json))
                                 }
                             }
                         }
-                        else -> sink.error(Exception("Data type is not correct"))
+                    } else {
+                        sink.error(Exception("Data type is not correct"))
                     }
                 } catch (e: Exception) {
                     sink.error(e)

@@ -7,5 +7,13 @@ data class InstanceInfo(
     val host: String,
     val port: Int
 ) {
-    @JsonIgnore val client: RSocketClient = RSocketClient(host, port)
+    @JsonIgnore
+    val client: RSocketClient = RSocketClient(host, port)
+
+    fun toView() = InstanceInfoView(host, port)
 }
+
+data class InstanceInfoView(
+    val host: String,
+    val port: Int
+)

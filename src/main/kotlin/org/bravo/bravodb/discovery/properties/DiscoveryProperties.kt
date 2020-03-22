@@ -3,22 +3,18 @@ package org.bravo.bravodb.discovery.properties
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
 import java.util.*
+import kotlin.system.exitProcess
 
 /**
  * Contain discovery service properties
  * [selfClientHost]: "bravodb.discovery.client.self.host"
  * [selfClientPort]: "bravodb.discovery.client.self.port"
- *
  * [selfServerHost]: "bravodb.discovery.server.self.host"
  * [selfServerPort]: "bravodb.discovery.server.self.port"
- *
  * [otherServerHost]: "bravodb.discovery.server.other.host"
  * [otherServerPort]: "bravodb.discovery.server.other.port"
  */
-class DiscoveryProperties private constructor(
-    val selfClientHost: String,
-    val selfClientPort: Int,
-
+data class DiscoveryProperties private constructor(
     val selfServerHost: String,
     val selfServerPort: Int,
 
@@ -44,16 +40,6 @@ class DiscoveryProperties private constructor(
                     return null
                 }
 
-                val selfClientHost = properties.getProperty(
-                    "bravodb.discovery.client.self.host",
-                    DefaultDiscoveryConnectInfo.HOST
-                )
-
-                val selfClientPort = properties.getProperty(
-                    "bravodb.discovery.client.self.port",
-                    DefaultDiscoveryConnectInfo.PORT.toString()
-                ).toInt()
-
                 val selfServerHost = properties.getProperty(
                     "bravodb.discovery.server.self.host",
                     DefaultDiscoveryConnectInfo.HOST
@@ -75,11 +61,28 @@ class DiscoveryProperties private constructor(
                 ).toInt()
 
                 return DiscoveryProperties(
-                    selfClientHost, selfClientPort,
                     selfServerHost, selfServerPort,
                     otherServerHost, otherServerPort
                 )
             }
+        }
+
+        fun fromEnvironments(): DiscoveryProperties {
+            return DiscoveryProperties(
+                System.getenv("bravodb.discovery.server.self.host")
+                    ?: errorLog("Self host must be set"),
+                System.getenv("bravodb.discovery.server.self.port")?.toInt()
+                    ?: errorLog("Self port must be set"),
+                System.getenv("bravodb.discovery.server.other.host")
+                    ?: errorLog("Host other server must be set"),
+                System.getenv("bravodb.discovery.server.other.port")?.toInt()
+                    ?: errorLog("Port other server must be set")
+            )
+        }
+
+        private fun errorLog(message: String): Nothing {
+            logger.error(message)
+            exitProcess(1)
         }
 
         private val logger = LogManager.getLogger(this::class.java.declaringClass)

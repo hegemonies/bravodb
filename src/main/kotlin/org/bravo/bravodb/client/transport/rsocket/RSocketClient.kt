@@ -15,6 +15,7 @@ import org.bravo.bravodb.data.registration.RegistrationResponse
 import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.storage.model.DataUnit
 import org.bravo.bravodb.data.storage.model.InstanceInfo
+import org.bravo.bravodb.data.storage.model.InstanceInfoView
 import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
 import org.bravo.bravodb.data.transport.Request
@@ -28,37 +29,48 @@ class RSocketClient(
     private var client: RSocket? = null
 
     init {
+        logger.info("Start connect to $host:$port")
         runBlocking {
-            runCatching {
-                if (!connect()) {
-                    logger.error("Error init RSocketClient during connection to $host:$port")
-                    InstanceStorage.findByHostAndPort(host, port)?.also {
-                        if (InstanceStorage.delete(it)) {
-                            logger.info("Deleted instance $host:$port")
-                        } else {
-                            logger.info("Cannot delete instance $host:$port")
-                        }
+            if (!connect()) {
+                logger.error("Error init RSocketClient during connection to $host:$port")
+                InstanceStorage.findByHostAndPort(host, port)?.also {
+                    if (InstanceStorage.delete(it)) {
+                        logger.info("Deleted instance $host:$port")
+                    } else {
+                        logger.info("Cannot delete instance $host:$port")
                     }
                 }
-            }.getOrElse {
-                logger.error("Cannot connect to $host:$port: ${it.message}")
             }
         }
     }
 
     override suspend fun connect(): Boolean {
-        client = RSocketFactory.connect()
-            .transport(TcpClientTransport.create(host, port))
-            .start()
-            .awaitFirstOrNull()
+        runCatching {
+            client = RSocketFactory.connect()
+                .transport(TcpClientTransport.create(host, port))
+                .start()
+                .awaitFirstOrNull()
+        }.getOrElse {
+            return false
+        }
         return client != null
     }
 
-    override suspend fun registration(): Boolean {
-        client ?: return false
+    override suspend fun registration(selfHost: String, selfPort: Int): Boolean {
+        client ?: also {
+            logger.error("Client of $host:$port is null")
+            if (!connect()) {
+                logger.error("Bad reconnection")
+            } else {
+                logger.info("Successfully reconnection")
+            }
+            return false
+        }
+
+        logger.info("Start registration in $host:$port")
 
         val requestBody = RegistrationRequest(
-            InstanceInfo(host, port)
+            InstanceInfoView(selfHost, selfPort)
         ).toJson()
         val request = Request(DataType.REGISTRATION_REQUEST, requestBody).toJson()
 
@@ -66,26 +78,30 @@ class RSocketClient(
             ?.awaitFirstOrNull()
             ?.also { payload ->
                 val response = fromJson<Response>(payload.dataUtf8)
+
                 if (response.answer.statusCode == AnswerStatus.OK) {
                     response.body ?: let {
                         logger.error("Response body is null")
                         return false
                     }
+
                     fromJson<RegistrationResponse>(response.body).also { resp ->
-                        resp.otherInstances?.forEach { instanceInfo ->
-                            if (!InstanceStorage.save(instanceInfo)) {
-                                logger.error("Error adding instance info in storage")
-                                return false
+                        if (resp.otherInstances.count() > 0) {
+                            resp.otherInstances.forEach { instanceInfo ->
+                                if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
+                                    logger.error("Error adding instance info in storage")
+                                    return false
+                                }
                             }
-                        } ?: also {
-                            logger.error("List of other instances in response on registration is null")
-                            return false
+                        } else {
+                            logger.info("Received 0 other instances")
                         }
                     }
                 } else {
                     logger.error("Receive error status on self registration")
                     return false
                 }
+
                 logger.info("Response on self registration: ${payload.dataUtf8}")
             }
             ?: also {

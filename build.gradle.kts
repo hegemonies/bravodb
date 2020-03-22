@@ -1,11 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-//    id("org.springframework.boot") version "2.1.12.BUILD-SNAPSHOT"
-//    id("io.spring.dependency-management") version "1.0.8.RELEASE"
     kotlin("jvm") version "1.3.70"
-//    kotlin("plugin.spring") version "1.3.61"
-    id("com.google.cloud.tools.jib") version "1.8.0"
+    id("java")
+    id("com.google.cloud.tools.jib") version "2.1.0"
 }
 
 group = "org.bravo"
@@ -14,8 +12,6 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
-//    maven { url = uri("https://repo.spring.io/milestone") }
-//    maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 dependencies {
@@ -35,13 +31,29 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
-//    implementation("org.springframework.boot:spring-boot-starter")
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "11"
+    }
+}
+
+// jar {
+//     manifest {
+//         attributes(
+//             'Main-Class': 'com.mypackage.MyClass'
+//         )
+//     }
+// }
+
+jib {
+    container {
+        mainClass = "org.bravo.bravodb.BravodbApplicationKt"
+        creationTime = "USE_CURRENT_TIMESTAMP"
+    }
+    to {
+        image = "bravo/bravodb:${version}"
     }
 }

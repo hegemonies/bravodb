@@ -1,8 +1,8 @@
 package org.bravo.bravodb.data.registration
 
 import org.bravo.bravodb.data.common.JsonConverter
-import org.bravo.bravodb.data.storage.model.InstanceInfo
+import org.bravo.bravodb.data.storage.model.InstanceInfoView
 
 data class RegistrationRequest(
-    val instanceInfo: InstanceInfo
+    val instanceInfo: InstanceInfoView
 ) : JsonConverter()

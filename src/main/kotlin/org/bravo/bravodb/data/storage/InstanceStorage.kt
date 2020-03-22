@@ -1,7 +1,10 @@
 package org.bravo.bravodb.data.storage
 
+import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.storage.model.InstanceInfo
 import java.util.concurrent.ConcurrentLinkedQueue
+
+private val logger = LogManager.getLogger()
 
 /**
  * Storage all information about database instances in network
@@ -18,11 +21,13 @@ object InstanceStorage {
         }
 
     suspend fun save(host: String, port: Int) =
-        save(InstanceInfo(host, port))
+        save(InstanceInfo(host, port)).also {
+            logger.info("Save instance: $host:$port")
+        }
 
     private suspend fun instanceExists(instance: InstanceInfo): Boolean {
         instances.find {
-            it == instance
+            it.host == instance.host && it.port == instance.port
         }.let {
             return when (it) {
                 null -> false

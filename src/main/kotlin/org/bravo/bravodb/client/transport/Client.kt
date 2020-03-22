@@ -7,6 +7,6 @@ interface Client {
     val port: Int
 
     suspend fun connect(): Boolean
-    suspend fun registration(): Boolean
+    suspend fun registration(selfHost: String, selfPort: Int): Boolean
     suspend fun sendData(unit: DataUnit)
 }

@@ -15,11 +15,14 @@ fun main() {
 
 fun initializeDiscovery() {
     measureTimeMillis {
-        val discoveryProperties = DiscoveryProperties.fromResourceFile("application.properties")
-            ?: run {
-                println("Can not read properties")
-                return
-            }
+        // val discoveryProperties = DiscoveryProperties.fromResourceFile("application.properties")
+        //     ?: run {
+        //         println("Can not read properties")
+        //         return
+        //     }
+        val discoveryProperties = DiscoveryProperties.fromEnvironments()
+
+        logger.info("Setup discovery properties: $discoveryProperties")
 
         val selfServerConfig = ServerDiscoveryConfig.Builder()
             .setPort(discoveryProperties.selfServerPort)

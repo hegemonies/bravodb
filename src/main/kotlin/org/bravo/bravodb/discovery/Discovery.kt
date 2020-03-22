@@ -28,14 +28,26 @@ class Discovery(
         }
 
         bootstrapServer()
-        if (configOtherServerDiscovery.host != serverDiscoveryConfig.host && configOtherServerDiscovery.port != serverDiscoveryConfig.port) {
-            InstanceStorage.save(
-                configOtherServerDiscovery.host,
-                configOtherServerDiscovery.port
+
+        if (configOtherServerDiscovery.host != serverDiscoveryConfig.host ) {
+            saveAndFirstRegistration(configOtherServerDiscovery)
+        } else if (configOtherServerDiscovery.port != serverDiscoveryConfig.port) {
+            saveAndFirstRegistration(configOtherServerDiscovery)
+        } else {
+            logger.warn(
+                "Doesn't save other instance ${configOtherServerDiscovery.host}:${configOtherServerDiscovery.port}"
             )
-            firstRegistration(configOtherServerDiscovery)
         }
+
         scheduleReregistration()
+    }
+
+    private suspend fun saveAndFirstRegistration(configOtherServerDiscovery: ServerDiscoveryConfig) {
+        InstanceStorage.save(
+            configOtherServerDiscovery.host,
+            configOtherServerDiscovery.port
+        )
+        firstRegistration(configOtherServerDiscovery)
     }
 
     private suspend fun scheduleReregistration() {
@@ -43,7 +55,7 @@ class Discovery(
             delay(15 * 1000) // 15 seconds
             logger.info("Start re-registration")
             InstanceStorage.findAll().forEach { instance ->
-                if (instance.client.registration()) {
+                if (instance.client.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)) {
                     logger.info("Reregistration in $instance is successfully")
                 } else {
                     logger.error("Reregistration in $instance is bad")
@@ -71,7 +83,7 @@ class Discovery(
         val isRegistration = InstanceStorage.findByHostAndPort(
             otherServerDiscoveryConfig.host,
             otherServerDiscoveryConfig.port
-        )?.client?.registration()
+        )?.client?.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
             ?: logger.info("Can not find $otherServerDiscoveryConfig").let {
                 return
             }
@@ -84,7 +96,7 @@ class Discovery(
                         && instance.host != otherServerDiscoveryConfig.host && instance.port != otherServerDiscoveryConfig.port
                 }
                 .collect { instance ->
-                    if (!instance.client.registration()) {
+                    if (!instance.client.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)) {
                         logger.error("Can not registration in instance ${instance.host}:${instance.port}")
                     }
                 }
