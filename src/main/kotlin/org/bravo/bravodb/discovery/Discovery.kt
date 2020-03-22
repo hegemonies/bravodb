@@ -84,26 +84,27 @@ class Discovery(
             otherServerDiscoveryConfig.host,
             otherServerDiscoveryConfig.port
         )?.client?.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
-            ?: logger.info("Can not find $otherServerDiscoveryConfig").let {
+            ?: logger.info("Cannot find $otherServerDiscoveryConfig").let {
                 return
             }
 
         // registration in got instances
         if (isRegistration) {
+            logger.info("First registration finish successfully")
+            logger.info("Start registration in received instances")
             InstanceStorage.findAll().asFlow()
                 .filter { instance ->
-                    instance.host != DefaultDiscoveryConnectInfo.HOST && instance.port != DefaultDiscoveryConnectInfo.PORT
-                        && instance.host != otherServerDiscoveryConfig.host && instance.port != otherServerDiscoveryConfig.port
+                    instance.host != otherServerDiscoveryConfig.host && instance.port != otherServerDiscoveryConfig.port
                 }
                 .collect { instance ->
                     if (!instance.client.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)) {
                         logger.error("Can not registration in instance ${instance.host}:${instance.port}")
                     }
                 }
+            logger.info("Finish registration in received instances")
         } else {
             logger.error("Can not registration in instance ${otherServerDiscoveryConfig.host}:${otherServerDiscoveryConfig.port}")
         }
-        logger.info("First registration start")
     }
 
     companion object {

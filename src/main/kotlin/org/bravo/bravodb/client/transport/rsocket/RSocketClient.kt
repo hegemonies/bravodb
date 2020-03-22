@@ -89,8 +89,10 @@ class RSocketClient(
                         if (resp.otherInstances.count() > 0) {
                             resp.otherInstances.forEach { instanceInfo ->
                                 if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
-                                    logger.error("Error adding instance info in storage")
-                                    return false
+                                    logger.info(
+                                        "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
+                                            " in storage because it already exists"
+                                    )
                                 }
                             }
                         } else {
