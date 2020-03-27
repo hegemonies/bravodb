@@ -35,12 +35,12 @@ class RSocketReceiveHandler : AbstractRSocket() {
                     if (request.type == DataType.REGISTRATION_REQUEST) {
                         val requestBody = fromJson<RegistrationRequest>(request.body)
                         runBlocking {
-                            // GlobalScope.launch {
+                            GlobalScope.launch {
                                 InstanceStorage.save(
                                     requestBody.instanceInfo.host,
                                     requestBody.instanceInfo.port
                                 )
-                            // }.start()
+                            }.start()
                             InstanceStorage.findAll().map { instanceInfo ->
                                 instanceInfo.toView()
                             }.let { instancesInfoViewList ->
