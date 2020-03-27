@@ -51,14 +51,19 @@ class RSocketClient(
 
     override suspend fun connect(): Boolean {
         runCatching {
+            client?.isDisposed?.let {
+                if (!it) {
+                    client?.dispose()
+                }
+            }
             client = RSocketFactory.connect()
-                .keepAlive(Duration.ofSeconds(2), Duration.ofSeconds(2), 1)
+                .keepAlive(Duration.ofSeconds(5), Duration.ofSeconds(10), 5)
                 .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .transport(TcpClientTransport.create(host, port))
                 .start()
                 .awaitFirstOrNull()
         }.getOrElse {
-            logger.error(it.message)
+            logger.error("Cannot connect to $host:$port: ${it.message}")
             return false
         }
         return client != null
@@ -74,6 +79,7 @@ class RSocketClient(
                 logger.info("Successfully reconnection")
             }
         }
+        client?.isDisposed
 
         logger.info("Start registration in $host:$port")
 
