@@ -21,6 +21,7 @@ class Discovery(
     private suspend fun schedulePrintStorageState() {
         GlobalScope.launch {
             while (true) {
+                delay(20 * 1000) // 20 sec
                 var acc = ""
                 val list = InstanceStorage.findAll()
                 list.forEach {
