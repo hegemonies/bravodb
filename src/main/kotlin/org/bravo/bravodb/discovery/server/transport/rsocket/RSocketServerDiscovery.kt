@@ -28,7 +28,7 @@ class RSocketServerDiscovery : ServerDiscoveryTransport {
                 // ?.awaitFirstOrNull()
                 ?: logger.error("Error starting RSocket discovery server")
         }.getOrElse {
-            logger.error(it)
+            logger.error("Error during run RSocket server because ${it.message}")
         }
     }
 

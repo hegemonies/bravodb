@@ -5,12 +5,19 @@ import org.bravo.bravodb.discovery.Discovery
 import org.bravo.bravodb.discovery.properties.DiscoveryProperties
 import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
 import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServerDiscovery
+import java.lang.Exception
 import kotlin.system.measureTimeMillis
 
 private val logger = LogManager.getLogger()
 
 fun main() {
-    initializeDiscovery()
+    try {
+        initializeDiscovery()
+    } catch (e: Exception) {
+        logger.error("Error from main: ${e.message}")
+    } catch (thr: Throwable) {
+        logger.error("Error from main: ${thr.message}")
+    }
 }
 
 fun initializeDiscovery() {

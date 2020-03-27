@@ -16,38 +16,56 @@ class Discovery(
 ) {
     private val server = Server(serverDiscoveryConfig)
 
-    fun start(configOtherServerDiscovery: ServerDiscoveryConfig) = runBlocking {
-        InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
-        logger.info("Discovery start")
+    fun start(configOtherServerDiscovery: ServerDiscoveryConfig) {
+        runBlocking {
+            runCatching {
+                InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
+                logger.info("Discovery start")
 
-        if (serverDiscoveryConfig::class.java != configOtherServerDiscovery::class.java) {
-            logger.error(
-                "Type of server config and other known server config not equal:" +
-                    " ${serverDiscoveryConfig::class.java} != ${configOtherServerDiscovery::class.java}"
-            )
-            return@runBlocking
+                if (serverDiscoveryConfig::class.java != configOtherServerDiscovery::class.java) {
+                    logger.error(
+                        "Type of server config and other known server config not equal:" +
+                            " ${serverDiscoveryConfig::class.java} != ${configOtherServerDiscovery::class.java}"
+                    )
+                    return@runBlocking
+                }
+
+                bootstrapServer()
+
+                runCatching {
+                    if (configOtherServerDiscovery.host != serverDiscoveryConfig.host) {
+                        saveAndFirstRegistration(configOtherServerDiscovery)
+                    } else if (configOtherServerDiscovery.port != serverDiscoveryConfig.port) {
+                        saveAndFirstRegistration(configOtherServerDiscovery)
+                    } else {
+                        logger.warn(
+                            "Doesn't save other instance ${configOtherServerDiscovery.host}:${configOtherServerDiscovery.port}"
+                        )
+                    }
+                }.getOrElse {
+                    logger.error("Canot first registration becasuse ${it.message}")
+                }
+
+                scheduleReregistration()
+            }.getOrElse {
+                logger.error("Restart discovery server because ${it.message}")
+                start(configOtherServerDiscovery)
+            }
         }
-
-        bootstrapServer()
-
-        if (configOtherServerDiscovery.host != serverDiscoveryConfig.host ) {
-            saveAndFirstRegistration(configOtherServerDiscovery)
-        } else if (configOtherServerDiscovery.port != serverDiscoveryConfig.port) {
-            saveAndFirstRegistration(configOtherServerDiscovery)
-        } else {
-            logger.warn(
-                "Doesn't save other instance ${configOtherServerDiscovery.host}:${configOtherServerDiscovery.port}"
-            )
-        }
-
-        scheduleReregistration()
     }
 
-    fun start() = runBlocking {
-        InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
-        logger.info("Discovery start")
-        bootstrapServer()
-        scheduleReregistration()
+    fun start() {
+        kotlin.runCatching {
+            runBlocking {
+                InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
+                logger.info("Discovery start")
+                bootstrapServer()
+                scheduleReregistration()
+            }
+        }.getOrElse {
+            logger.error("Restart discovery server because ${it.message}")
+            start()
+        }
     }
 
     private suspend fun saveAndFirstRegistration(configOtherServerDiscovery: ServerDiscoveryConfig) {
@@ -62,11 +80,16 @@ class Discovery(
         while (true) {
             delay(15 * 1000) // 15 seconds
             logger.info("Start re-registration")
-            InstanceStorage.findAll().forEach { instance ->
-                if (instance.client.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)) {
-                    logger.info("Reregistration in $instance is successfully")
-                } else {
-                    logger.error("Reregistration in $instance is bad")
+            for (instance in InstanceStorage.findAll()) {
+                try {
+                    if (instance.client.registration(serverDiscoveryConfig.host, serverDiscoveryConfig.port)) {
+                        logger.info("Reregistration in $instance is successfully")
+                    } else {
+                        logger.error("Reregistration in $instance is bad")
+                        InstanceStorage.delete(instance)
+                    }
+                } catch(e: Throwable) {
+                    logger.error("Error during reregistration in ${instance.host}:${instance.port}")
                 }
             }
             logger.info("Finish re-registration")

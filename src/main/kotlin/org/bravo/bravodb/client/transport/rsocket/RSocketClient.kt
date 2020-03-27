@@ -67,10 +67,10 @@ class RSocketClient(
             logger.error("Client of $host:$port is null")
             if (!connect()) {
                 logger.error("Bad reconnection")
+                return false
             } else {
                 logger.info("Successfully reconnection")
             }
-            return false
         }
 
         logger.info("Start registration in $host:$port")
