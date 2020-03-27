@@ -1,4 +1,4 @@
-package org.bravo.bravodb.database.server.transport.rsocket.handler
+package org.bravo.bravodb.discovery.server.transport.rsocket
 
 import io.rsocket.AbstractRSocket
 import io.rsocket.Payload
@@ -13,6 +13,8 @@ import org.bravo.bravodb.data.common.fromJson
 import org.bravo.bravodb.data.database.GetDataUnitRequest
 import org.bravo.bravodb.data.database.GetDataUnitResponse
 import org.bravo.bravodb.data.database.PutDataUnit
+import org.bravo.bravodb.data.registration.RegistrationRequest
+import org.bravo.bravodb.data.registration.RegistrationResponse
 import org.bravo.bravodb.data.storage.DataStorage
 import org.bravo.bravodb.data.storage.InstanceStorage
 import org.bravo.bravodb.data.storage.model.DataUnit
@@ -21,19 +23,47 @@ import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
+import org.bravo.bravodb.database.server.transport.rsocket.handler.RSocketDatabaseTransportHandler
 import reactor.core.publisher.Mono
 
-class RSocketDatabaseTransportHandler : AbstractRSocket() {
+class RSocketReceiveHandler : AbstractRSocket() {
 
+    /**
+     * Registration handler: save instance info in storage and response
+     * @param [payload] contain data about host instance (InstanceInfo}
+     */
     override fun requestResponse(payload: Payload?): Mono<Payload> {
         return Mono.create { sink ->
-            payload?.dataUtf8?.also {
-                logger.info("Receive data: $it")
+            logger.info("Receive data: ${payload?.dataUtf8}")
 
-                runCatching {
-                    val request = fromJson<Request>(it)
+            payload?.let {
+                try {
+                    val request = fromJson<Request>(it.dataUtf8)
 
                     when (request.type) {
+                        DataType.REGISTRATION_REQUEST -> {
+                            val requestBody = fromJson<RegistrationRequest>(request.body)
+                            runBlocking {
+                                GlobalScope.launch {
+                                    InstanceStorage.save(
+                                        requestBody.instanceInfo.host,
+                                        requestBody.instanceInfo.port
+                                    )
+                                }.start()
+                                InstanceStorage.findAll().map { instanceInfo ->
+                                    instanceInfo.toView()
+                                }.let { instancesInfoViewList ->
+                                    logger.info("Send list: $instancesInfoViewList")
+                                    Response(
+                                        Answer(AnswerStatus.OK),
+                                        DataType.REGISTRATION_RESPONSE,
+                                        RegistrationResponse(instancesInfoViewList).toJson()
+                                    ).toJson().let { json ->
+                                        sink.success(DefaultPayload.create(json))
+                                    }
+                                }
+                            }
+                        }
                         DataType.PUT_DATA -> {
                             val requestBody = fromJson<PutDataUnit>(request.body)
                             runBlocking { DataStorage.save(requestBody.key, requestBody.value) }
@@ -52,15 +82,13 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
                             }
                         }
                         else -> {
-                            logger.error("Received not correct datatype")
-                            sink.error(Exception("Not correct datatype"))
+                            sink.error(Exception("Data type is not correct"))
                         }
                     }
-                }.getOrElse { error ->
-                    logger.error("Getting error during handling request: ${error.message}")
-                    sink.error(error)
+                } catch (e: Exception) {
+                    sink.error(e)
                 }
-            } ?: "Payload is null".let {
+            } ?: "Receive empty payload".also {
                 logger.error(it)
                 sink.error(Exception(it))
             }

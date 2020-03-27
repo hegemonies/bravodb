@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.server.transport
+package org.bravo.bravodb.server.server.transport
 
 interface ServerDiscoveryTransport {
     var port: Int

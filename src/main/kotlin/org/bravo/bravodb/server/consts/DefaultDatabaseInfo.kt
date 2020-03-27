@@ -1,4 +1,4 @@
-package org.bravo.bravodb.database.consts
+package org.bravo.bravodb.discovery.consts
 
 object DefaultDatabaseInfo {
     const val HOST = "localhost"

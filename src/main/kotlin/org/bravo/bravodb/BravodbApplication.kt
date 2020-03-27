@@ -1,13 +1,13 @@
 package org.bravo.bravodb
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.database.server.DatabaseServer
-import org.bravo.bravodb.database.server.config.ServerDatabaseConfig
-import org.bravo.bravodb.discovery.Discovery
-import org.bravo.bravodb.discovery.properties.DiscoveryProperties
-import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
-import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServerDiscovery
-import java.lang.Exception
+import org.bravo.bravodb.server.Discovery
+import org.bravo.bravodb.server.properties.BravoDBProperties
+import org.bravo.bravodb.server.server.config.ServerDiscoveryConfig
+import org.bravo.bravodb.server.server.transport.rsocket.RSocketServerDiscovery
 import kotlin.system.measureTimeMillis
 
 private val logger = LogManager.getLogger()
@@ -20,13 +20,6 @@ fun main() {
     } catch (thr: Throwable) {
         logger.error("Error from main: ${thr.message}")
     }
-
-    DatabaseServer(
-        ServerDatabaseConfig.Builder()
-            .setHost("localhost")
-            .setPort(8920)
-            .build()
-    ).start()
 }
 
 fun initializeDiscovery() {
@@ -36,7 +29,7 @@ fun initializeDiscovery() {
         //         println("Can not read properties")
         //         return
         //     }
-        val discoveryProperties = DiscoveryProperties.fromEnvironments()
+        val discoveryProperties = BravoDBProperties.fromEnvironments()
 
         logger.info("Setup discovery properties: $discoveryProperties")
 
