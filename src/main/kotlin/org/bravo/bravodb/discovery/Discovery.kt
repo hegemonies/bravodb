@@ -104,7 +104,11 @@ class Discovery(
                         logger.info("Reregistration in $instance is successfully")
                     } else {
                         logger.error("Reregistration in $instance is bad")
-                        // InstanceStorage.delete(instance)
+                        if (InstanceStorage.delete(instance)) {
+                            logger.warn("Delete ${instance.host}:${instance.port} is successfully")
+                        } else {
+                            logger.warn("Delete ${instance.host}:${instance.port} is bad")
+                        }
                     }
                 } catch(e: Throwable) {
                     logger.error("Error during reregistration in ${instance.host}:${instance.port}")

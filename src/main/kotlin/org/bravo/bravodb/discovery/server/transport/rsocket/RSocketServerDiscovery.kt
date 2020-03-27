@@ -24,8 +24,8 @@ class RSocketServerDiscovery : ServerDiscoveryTransport {
                 .transport(TcpServerTransport.create(port))
                 .start()
                 .awaitFirstOrNull()
-                // ?.onClose()
-                // ?.awaitFirstOrNull()
+                ?.onClose()
+                ?.awaitFirstOrNull()
                 ?: logger.error("Error starting RSocket discovery server")
         }.getOrElse {
             logger.error("Error during run RSocket server because ${it.message}")
