@@ -5,6 +5,8 @@ import io.rsocket.RSocketFactory
 import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.client.TcpClientTransport
 import io.rsocket.util.DefaultPayload
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -35,13 +37,13 @@ class RSocketClient(
         runBlocking {
             if (!connect()) {
                 logger.error("Error init RSocketClient during connection to $host:$port")
-                InstanceStorage.findByHostAndPort(host, port)?.also {
-                    if (InstanceStorage.delete(it)) {
-                        logger.info("Deleted instance $host:$port")
-                    } else {
-                        logger.info("Cannot delete instance $host:$port")
-                    }
-                }
+                // InstanceStorage.findByHostAndPort(host, port)?.also {
+                //     if (InstanceStorage.delete(it)) {
+                //         logger.info("Deleted instance $host:$port")
+                //     } else {
+                //         logger.info("Cannot delete instance $host:$port")
+                //     }
+                // }
             }
         }
         logger.info("Finish connect to $host:$port")
@@ -49,14 +51,19 @@ class RSocketClient(
 
     override suspend fun connect(): Boolean {
         runCatching {
+            client?.isDisposed?.let {
+                if (!it) {
+                    client?.dispose()
+                }
+            }
             client = RSocketFactory.connect()
-                .keepAlive(Duration.ofSeconds(2), Duration.ofSeconds(2), 1)
+                .keepAlive(Duration.ofSeconds(5), Duration.ofSeconds(10), 5)
                 .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .transport(TcpClientTransport.create(host, port))
                 .start()
                 .awaitFirstOrNull()
         }.getOrElse {
-            logger.error(it.message)
+            logger.error("Cannot connect to $host:$port: ${it.message}")
             return false
         }
         return client != null
@@ -80,43 +87,50 @@ class RSocketClient(
         ).toJson()
         val request = Request(DataType.REGISTRATION_REQUEST, requestBody).toJson()
 
-        client?.requestResponse(DefaultPayload.create(request))
-            ?.awaitFirstOrNull()
-            ?.also { payload ->
-                logger.info("Received response: ${payload.dataUtf8}")
-                val response = fromJson<Response>(payload.dataUtf8)
+        runCatching {
+            client?.requestResponse(DefaultPayload.create(request))
+                ?.awaitFirstOrNull()
+                ?.also { payload ->
+                    logger.info("Received response: ${payload.dataUtf8}")
+                    val response = fromJson<Response>(payload.dataUtf8)
 
-                if (response.answer.statusCode == AnswerStatus.OK) {
-                    response.body ?: let {
-                        logger.error("Response body is null")
+                    if (response.answer.statusCode == AnswerStatus.OK) {
+                        response.body ?: let {
+                            logger.error("Response body is null")
+                            return false
+                        }
+
+                        fromJson<RegistrationResponse>(response.body).also { resp ->
+                            if (resp.otherInstances.count() > 0) {
+                                resp.otherInstances.forEach { instanceInfo ->
+                                    GlobalScope.launch {
+                                        if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
+                                            logger.info(
+                                                "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
+                                                    " in storage because it already exists"
+                                            )
+                                        }
+                                    }.start()
+                                }
+                            } else {
+                                logger.info("Received 0 other instances")
+                            }
+                        }
+                    } else {
+                        logger.error("Receive error status on self registration")
                         return false
                     }
 
-                    fromJson<RegistrationResponse>(response.body).also { resp ->
-                        if (resp.otherInstances.count() > 0) {
-                            resp.otherInstances.forEach { instanceInfo ->
-                                if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
-                                    logger.info(
-                                        "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
-                                            " in storage because it already exists"
-                                    )
-                                }
-                            }
-                        } else {
-                            logger.info("Received 0 other instances")
-                        }
-                    }
-                } else {
-                    logger.error("Receive error status on self registration")
+                    logger.info("Response on self registration: ${payload.dataUtf8}")
+                }
+                ?: also {
+                    logger.error("Error registration")
                     return false
                 }
-
-                logger.info("Response on self registration: ${payload.dataUtf8}")
-            }
-            ?: also {
-                logger.error("Error registration")
-                return false
-            }
+        }.getOrElse {
+            logger.error("Cannot do request-response: ${it.message}")
+            InstanceStorage.delete(InstanceInfoView(host, port))
+        }
         return true
     }
 

@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.storage.model.InstanceInfo
 import org.bravo.bravodb.data.storage.model.InstanceInfoView
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = LogManager.getLogger()
 
@@ -12,7 +13,8 @@ private val logger = LogManager.getLogger()
  */
 object InstanceStorage {
 
-    private val instances = ConcurrentLinkedQueue<InstanceInfo>()
+    // private val instances = ConcurrentLinkedQueue<InstanceInfo>()
+    private val instances = CopyOnWriteArrayList<InstanceInfo>()
 
     private var selfInstanceInfo: InstanceInfoView? = null
 
@@ -89,4 +91,11 @@ object InstanceStorage {
         }
 
     fun delete(instance: InstanceInfo) = instances.remove(instance)
+
+    fun delete(instance: InstanceInfoView) =
+        instances.find {
+            instance.host == it.host && instance.port == it.port
+        }?.let {
+            delete(it)
+        } ?: false
 }
