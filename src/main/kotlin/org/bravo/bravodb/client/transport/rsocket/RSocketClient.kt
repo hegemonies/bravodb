@@ -79,7 +79,6 @@ class RSocketClient(
                 logger.info("Successfully reconnection")
             }
         }
-        client?.isDisposed
 
         logger.info("Start registration in $host:$port")
 
@@ -88,45 +87,50 @@ class RSocketClient(
         ).toJson()
         val request = Request(DataType.REGISTRATION_REQUEST, requestBody).toJson()
 
-        client?.requestResponse(DefaultPayload.create(request))
-            ?.awaitFirstOrNull()
-            ?.also { payload ->
-                logger.info("Received response: ${payload.dataUtf8}")
-                val response = fromJson<Response>(payload.dataUtf8)
+        runCatching {
+            client?.requestResponse(DefaultPayload.create(request))
+                ?.awaitFirstOrNull()
+                ?.also { payload ->
+                    logger.info("Received response: ${payload.dataUtf8}")
+                    val response = fromJson<Response>(payload.dataUtf8)
 
-                if (response.answer.statusCode == AnswerStatus.OK) {
-                    response.body ?: let {
-                        logger.error("Response body is null")
+                    if (response.answer.statusCode == AnswerStatus.OK) {
+                        response.body ?: let {
+                            logger.error("Response body is null")
+                            return false
+                        }
+
+                        fromJson<RegistrationResponse>(response.body).also { resp ->
+                            if (resp.otherInstances.count() > 0) {
+                                resp.otherInstances.forEach { instanceInfo ->
+                                    GlobalScope.launch {
+                                        if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
+                                            logger.info(
+                                                "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
+                                                    " in storage because it already exists"
+                                            )
+                                        }
+                                    }.start()
+                                }
+                            } else {
+                                logger.info("Received 0 other instances")
+                            }
+                        }
+                    } else {
+                        logger.error("Receive error status on self registration")
                         return false
                     }
 
-                    fromJson<RegistrationResponse>(response.body).also { resp ->
-                        if (resp.otherInstances.count() > 0) {
-                            resp.otherInstances.forEach { instanceInfo ->
-                                GlobalScope.launch {
-                                    if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
-                                        logger.info(
-                                            "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
-                                                " in storage because it already exists"
-                                        )
-                                    }
-                                }.start()
-                            }
-                        } else {
-                            logger.info("Received 0 other instances")
-                        }
-                    }
-                } else {
-                    logger.error("Receive error status on self registration")
+                    logger.info("Response on self registration: ${payload.dataUtf8}")
+                }
+                ?: also {
+                    logger.error("Error registration")
                     return false
                 }
-
-                logger.info("Response on self registration: ${payload.dataUtf8}")
-            }
-            ?: also {
-                logger.error("Error registration")
-                return false
-            }
+        }.getOrElse {
+            logger.error("Cannot do request-response: ${it.message}")
+            InstanceStorage.delete(InstanceInfoView(host, port))
+        }
         return true
     }
 

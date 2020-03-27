@@ -91,4 +91,11 @@ object InstanceStorage {
         }
 
     fun delete(instance: InstanceInfo) = instances.remove(instance)
+
+    fun delete(instance: InstanceInfoView) =
+        instances.find {
+            instance.host == it.host && instance.port == it.port
+        }?.let {
+            delete(it)
+        } ?: false
 }
