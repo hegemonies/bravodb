@@ -1,33 +1,37 @@
 package org.bravo.bravodb.data.storage
 
+import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.storage.model.DataUnit
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Contain create and delete function on [DataUnit] storage
  */
 object DataStorage {
-    // private val pool = ConcurrentLinkedQueue<DataUnit>()
-    val pool = ConcurrentHashMap<String, String>()
+    private val pool = ConcurrentHashMap<String, String>()
+    private val logger = LogManager.getLogger(this::class.java.declaringClass)
 
-    suspend fun save(key: String, value: String) = this.save(DataUnit(key, value))
+    fun save(key: String, value: String) = save(DataUnit(key, value))
 
-    suspend fun save(unit: DataUnit) {
+    fun save(unit: DataUnit) {
+        if (pool[unit.key] == null) {
+            logger.info("Save $unit to database")
+        } else {
+            logger.info("Update $unit in database")
+        }
         pool[unit.key] = unit.value
     }
 
-    suspend fun findAll() = pool
+    fun findAll() = pool
 
-    suspend fun delete(unit: DataUnit): Boolean = pool.remove(unit.key, unit.value)
+    fun delete(unit: DataUnit): Boolean = pool.remove(unit.key, unit.value)
 
     fun findByKey(key: String) =
         pool[key]?.let { value ->
             DataUnit(key, value)
         }
 
-    suspend fun deleteAll() =
+    fun deleteAll() =
         pool.forEach {
             delete(DataUnit(it.key, it.value))
         }

@@ -21,13 +21,15 @@ class RSocketServerDatabaseTransport(
             RSocketFactory.receive()
                 .frameDecoder(PayloadDecoder.ZERO_COPY)
                 .acceptor(this::receiveHandler)
-                .transport(TcpServerTransport.create(port))
+                .transport(TcpServerTransport.create(host, port))
                 .start()
                 .awaitFirstOrNull()
-                ?.onClose()
+                // ?.onClose()
                 ?: logger.error("Error starting RSocket database server")
         } catch (e: Exception) {
-            logger.error(e)
+            logger.error("Error during server running: ${e.message}")
+        } catch (e: Throwable) {
+            logger.error("Error during server running: ${e.message}")
         }
     }
 

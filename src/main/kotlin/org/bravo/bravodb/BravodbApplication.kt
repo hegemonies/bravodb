@@ -1,6 +1,8 @@
 package org.bravo.bravodb
 
 import org.apache.logging.log4j.LogManager
+import org.bravo.bravodb.database.server.DatabaseServer
+import org.bravo.bravodb.database.server.config.ServerDatabaseConfig
 import org.bravo.bravodb.discovery.Discovery
 import org.bravo.bravodb.discovery.properties.DiscoveryProperties
 import org.bravo.bravodb.discovery.server.config.ServerDiscoveryConfig
@@ -18,6 +20,13 @@ fun main() {
     } catch (thr: Throwable) {
         logger.error("Error from main: ${thr.message}")
     }
+
+    DatabaseServer(
+        ServerDatabaseConfig.Builder()
+            .setHost("localhost")
+            .setPort(8920)
+            .build()
+    ).start()
 }
 
 fun initializeDiscovery() {

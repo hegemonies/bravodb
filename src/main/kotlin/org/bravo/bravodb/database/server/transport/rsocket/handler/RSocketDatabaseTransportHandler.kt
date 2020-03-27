@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.common.fromJson
+import org.bravo.bravodb.data.database.GetDataUnitRequest
+import org.bravo.bravodb.data.database.GetDataUnitResponse
 import org.bravo.bravodb.data.database.PutDataUnit
 import org.bravo.bravodb.data.storage.DataStorage
 import org.bravo.bravodb.data.storage.InstanceStorage
@@ -31,24 +33,37 @@ class RSocketDatabaseTransportHandler : AbstractRSocket() {
                 runCatching {
                     val request = fromJson<Request>(it)
 
-                    if (request.type != DataType.PUT_DATA) {
-                        logger.error("Received not correct datatype")
-                        sink.error(Exception("Not correct datatype"))
-                    } else {
-                        val requestBody = fromJson<PutDataUnit>(request.body)
-                        runBlocking {
-                            DataStorage.save(requestBody.key, requestBody.value)
+                    when (request.type) {
+                        DataType.PUT_DATA -> {
+                            val requestBody = fromJson<PutDataUnit>(request.body)
+                            runBlocking { DataStorage.save(requestBody.key, requestBody.value) }
+                            GlobalScope.launch { replicationData(requestBody) }.start()
+                            val response = Response(Answer(AnswerStatus.OK)).toJson()
+                            sink.success(DefaultPayload.create(response)).also {
+                                logger.info("Success answer $response")
+                            }
                         }
-                        GlobalScope.launch {
-                            replicationData(requestBody)
-                        }.start()
-                        val response = Response(Answer(AnswerStatus.OK))
-                        sink.success(DefaultPayload.create(response.toJson()))
+                        DataType.GET_DATA -> {
+                            val requestBody = fromJson<GetDataUnitRequest>(request.body)
+                            val responseBody = GetDataUnitResponse(DataStorage.findByKey(requestBody.key)).toJson()
+                            val response = Response(Answer(AnswerStatus.OK), DataType.GET_DATA, responseBody).toJson()
+                            sink.success(DefaultPayload.create(response)).also {
+                                logger.info("Success answer $response")
+                            }
+                        }
+                        else -> {
+                            logger.error("Received not correct datatype")
+                            sink.error(Exception("Not correct datatype"))
+                        }
                     }
                 }.getOrElse { error ->
+                    logger.error("Getting error during handling request: ${error.message}")
                     sink.error(error)
                 }
-            } ?: sink.error(Exception("Payload is null"))
+            } ?: "Payload is null".let {
+                logger.error(it)
+                sink.error(Exception(it))
+            }
         }
     }
 

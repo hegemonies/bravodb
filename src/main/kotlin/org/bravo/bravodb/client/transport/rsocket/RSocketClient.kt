@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.client.transport.Client
 import org.bravo.bravodb.data.common.fromJson
-import org.bravo.bravodb.data.database.GetDataUnit
+import org.bravo.bravodb.data.database.GetDataUnitRequest
 import org.bravo.bravodb.data.database.PutDataUnit
 import org.bravo.bravodb.data.registration.RegistrationRequest
 import org.bravo.bravodb.data.registration.RegistrationResponse
@@ -161,7 +161,7 @@ class RSocketClient(
     }
 
     override suspend fun getData(key: String): DataUnit? {
-        val requestBody = GetDataUnit(key).toJson()
+        val requestBody = GetDataUnitRequest(key).toJson()
         val request = Request(DataType.GET_DATA, requestBody).toJson()
 
         val payload = client?.requestResponse(DefaultPayload.create(request))
