@@ -1,7 +1,18 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+buildscript {
+    repositories {
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+    }
+    dependencies {
+        classpath("com.github.jengelman.gradle.plugins:shadow:5.2.0")
+    }
+}
+
 plugins {
-    kotlin("jvm") version "1.3.70"
+    kotlin("jvm") version "1.3.71"
     java
     id("com.google.cloud.tools.jib") version "2.1.0"
 }
@@ -9,6 +20,8 @@ plugins {
 group = "org.bravo"
 version = "0.1"
 java.sourceCompatibility = JavaVersion.VERSION_11
+
+apply(plugin = "com.github.johnrengelman.shadow")
 
 repositories {
     mavenCentral()
