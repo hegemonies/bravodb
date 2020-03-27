@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.consts
+package org.bravo.bravodb.server.consts
 
 object DefaultDiscoveryConnectInfo {
     const val HOST = "localhost"

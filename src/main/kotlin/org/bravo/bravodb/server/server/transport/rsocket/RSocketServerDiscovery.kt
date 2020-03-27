@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.server.transport.rsocket
+package org.bravo.bravodb.server.server.transport.rsocket
 
 import io.rsocket.ConnectionSetupPayload
 import io.rsocket.RSocket
@@ -7,8 +7,8 @@ import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.server.TcpServerTransport
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.apache.logging.log4j.LogManager
-import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
-import org.bravo.bravodb.discovery.server.transport.ServerDiscoveryTransport
+import org.bravo.bravodb.server.consts.DefaultDiscoveryConnectInfo
+import org.bravo.bravodb.server.server.transport.ServerDiscoveryTransport
 import reactor.core.publisher.Mono
 
 class RSocketServerDiscovery : ServerDiscoveryTransport {

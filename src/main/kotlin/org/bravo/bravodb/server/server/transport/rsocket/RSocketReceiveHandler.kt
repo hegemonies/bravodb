@@ -1,4 +1,4 @@
-package org.bravo.bravodb.discovery.server.transport.rsocket
+package org.bravo.bravodb.server.server.transport.rsocket
 
 import io.rsocket.AbstractRSocket
 import io.rsocket.Payload
@@ -23,7 +23,6 @@ import org.bravo.bravodb.data.transport.AnswerStatus
 import org.bravo.bravodb.data.transport.DataType
 import org.bravo.bravodb.data.transport.Request
 import org.bravo.bravodb.data.transport.Response
-import org.bravo.bravodb.database.server.transport.rsocket.handler.RSocketDatabaseTransportHandler
 import reactor.core.publisher.Mono
 
 class RSocketReceiveHandler : AbstractRSocket() {

@@ -59,7 +59,7 @@ class Discovery(
                         )
                     }
                 }.getOrElse {
-                    logger.error("Canot first registration becasuse ${it.message}")
+                    logger.error("Cannot first registration because  ${it.message}")
                 }
 
                 scheduleReregistration()

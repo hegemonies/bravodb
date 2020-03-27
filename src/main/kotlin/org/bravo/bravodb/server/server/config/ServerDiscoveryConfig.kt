@@ -1,9 +1,8 @@
-package org.bravo.bravodb.discovery.server.config
+package org.bravo.bravodb.server.server.config
 
-import org.bravo.bravodb.database.server.transport.rsocket.RSocketServerDatabaseTransport
-import org.bravo.bravodb.discovery.consts.DefaultDiscoveryConnectInfo
-import org.bravo.bravodb.discovery.server.transport.ServerDiscoveryTransport
-import org.bravo.bravodb.discovery.server.transport.rsocket.RSocketServerDiscovery
+import org.bravo.bravodb.server.consts.DefaultDiscoveryConnectInfo
+import org.bravo.bravodb.server.server.transport.ServerDiscoveryTransport
+import org.bravo.bravodb.server.server.transport.rsocket.RSocketServerDiscovery
 
 class ServerDiscoveryConfig private constructor(
     val port: Int,
