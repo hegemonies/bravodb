@@ -1,9 +1,11 @@
 package org.bravo.bravodb.discovery
 
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.data.storage.InstanceStorage
@@ -16,8 +18,22 @@ class Discovery(
 ) {
     private val server = Server(serverDiscoveryConfig)
 
+    private suspend fun schedulePrintStorageState() {
+        GlobalScope.launch {
+            while (true) {
+                var acc = ""
+                val list = InstanceStorage.findAll()
+                list.forEach {
+                    acc = "$acc (${it.host}:${it.port})"
+                }
+                logger.warn("Storage state: $acc")
+            }
+        }
+    }
+
     fun start(configOtherServerDiscovery: ServerDiscoveryConfig) {
         runBlocking {
+            schedulePrintStorageState()
             runCatching {
                 InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
                 logger.info("Discovery start")
@@ -55,10 +71,11 @@ class Discovery(
     }
 
     fun start() {
-        kotlin.runCatching {
+        runCatching {
             runBlocking {
-                InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
                 logger.info("Discovery start")
+                schedulePrintStorageState()
+                InstanceStorage.setSelfInstanceInfo(serverDiscoveryConfig.host, serverDiscoveryConfig.port)
                 bootstrapServer()
                 scheduleReregistration()
             }
@@ -86,7 +103,7 @@ class Discovery(
                         logger.info("Reregistration in $instance is successfully")
                     } else {
                         logger.error("Reregistration in $instance is bad")
-                        InstanceStorage.delete(instance)
+                        // InstanceStorage.delete(instance)
                     }
                 } catch(e: Throwable) {
                     logger.error("Error during reregistration in ${instance.host}:${instance.port}")

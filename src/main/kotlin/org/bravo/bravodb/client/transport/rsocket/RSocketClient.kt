@@ -37,13 +37,13 @@ class RSocketClient(
         runBlocking {
             if (!connect()) {
                 logger.error("Error init RSocketClient during connection to $host:$port")
-                InstanceStorage.findByHostAndPort(host, port)?.also {
-                    if (InstanceStorage.delete(it)) {
-                        logger.info("Deleted instance $host:$port")
-                    } else {
-                        logger.info("Cannot delete instance $host:$port")
-                    }
-                }
+                // InstanceStorage.findByHostAndPort(host, port)?.also {
+                //     if (InstanceStorage.delete(it)) {
+                //         logger.info("Deleted instance $host:$port")
+                //     } else {
+                //         logger.info("Cannot delete instance $host:$port")
+                //     }
+                // }
             }
         }
         logger.info("Finish connect to $host:$port")
