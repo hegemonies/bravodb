@@ -5,6 +5,8 @@ import io.rsocket.RSocketFactory
 import io.rsocket.frame.decoder.PayloadDecoder
 import io.rsocket.transport.netty.client.TcpClientTransport
 import io.rsocket.util.DefaultPayload
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -95,12 +97,14 @@ class RSocketClient(
                     fromJson<RegistrationResponse>(response.body).also { resp ->
                         if (resp.otherInstances.count() > 0) {
                             resp.otherInstances.forEach { instanceInfo ->
-                                if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
-                                    logger.info(
-                                        "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
-                                            " in storage because it already exists"
-                                    )
-                                }
+                                GlobalScope.launch {
+                                    if (!InstanceStorage.save(instanceInfo.host, instanceInfo.port)) {
+                                        logger.info(
+                                            "Cannot adding instance info ${instanceInfo.host}:${instanceInfo.port}" +
+                                                " in storage because it already exists"
+                                        )
+                                    }
+                                }.start()
                             }
                         } else {
                             logger.info("Received 0 other instances")
