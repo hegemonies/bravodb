@@ -182,8 +182,13 @@ class RSocketClient(
             return null
         }
 
-        return response.body?.let {
-            fromJson<DataUnit>(it)
+        return response.body?.let { body ->
+            val responseBody = fromJson<DataUnit>(body)
+            if (responseBody.key == "NO" && responseBody.value == "NO") {
+                null
+            } else {
+                responseBody
+            }
         }
     }
 

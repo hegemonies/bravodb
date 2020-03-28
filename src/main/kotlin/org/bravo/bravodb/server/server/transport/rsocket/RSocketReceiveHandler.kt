@@ -74,7 +74,9 @@ class RSocketReceiveHandler : AbstractRSocket() {
                         }
                         DataType.GET_DATA -> {
                             val requestBody = fromJson<GetDataUnitRequest>(request.body)
-                            val responseBody = GetDataUnitResponse(DataStorage.findByKey(requestBody.key)).toJson()
+                            val responseBody = GetDataUnitResponse(
+                                    DataStorage.findByKey(requestBody.key) ?: DataUnit("NO", "NO")
+                            ).toJson()
                             val response = Response(Answer(AnswerStatus.OK), DataType.GET_DATA, responseBody).toJson()
                             sink.success(DefaultPayload.create(response)).also {
                                 logger.info("Success answer $response")
