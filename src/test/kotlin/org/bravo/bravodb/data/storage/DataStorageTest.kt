@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.bravo.bravodb.data.storage.model.DataUnit
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -31,5 +32,15 @@ internal class DataStorageTest {
             DataStorage.findAll()
         )
         assertEquals(data3, DataStorage.findByKey(data3.key))
+    }
+
+    @Test
+    fun `pass when storage return correct data`() = runBlocking {
+        val key = "1"
+        val expectedData = DataUnit(key, "2")
+        DataStorage.save(expectedData)
+        val actualData = DataStorage.findByKey(key)
+        assertNotNull(actualData)
+        assertEquals(expectedData, actualData)
     }
 }
