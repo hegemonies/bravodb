@@ -2,7 +2,6 @@ package org.bravo.bravodb
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.bravo.bravodb.server.Discovery
 import org.bravo.bravodb.server.properties.BravoDBProperties

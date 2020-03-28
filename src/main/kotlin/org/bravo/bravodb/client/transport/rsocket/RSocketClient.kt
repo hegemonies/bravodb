@@ -187,6 +187,32 @@ class RSocketClient(
         }
     }
 
+    override suspend fun replicateData(data: DataUnit): Boolean {
+        val requestBody = PutDataUnit(data.key, data.value).toJson()
+        val request = Request(DataType.REPLICATION_DATA, requestBody).toJson()
+
+        val payload = client?.requestResponse(DefaultPayload.create(request))
+            ?.awaitFirstOrNull()
+            ?.dataUtf8
+            ?: run {
+                logger.error("Cannot send data to $host:$port: client not connection")
+                return false
+            }
+
+        val response = fromJson<Response>(payload)
+
+        if (response.answer.statusCode != AnswerStatus.OK) {
+            logger.error("Received not success response: ${response.answer.message}")
+            return false
+        }
+        if (response.type != DataType.REPLICATION_DATA) {
+            logger.error("Data type in response is not DataType.REPLICATION_DATA")
+            return false
+        }
+
+        return true
+    }
+
     companion object {
         private val logger = LogManager.getLogger(this::class.java.declaringClass)
     }
